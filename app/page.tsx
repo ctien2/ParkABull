@@ -11,7 +11,6 @@ export default function Home() {
         </div>
       </header>
       <main className="flex flex-col items-center min-h-screen p-8">
-        <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
       </main>
     </>
   );
