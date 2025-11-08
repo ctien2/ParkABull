@@ -1,18 +1,18 @@
 import Image from "next/image";
+import { UserMenu } from "@/components/auth/user-menu";
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center min-h-screen p-8 gap-6">
-      <h1 className="text-2xl font-semibold">Parking Lot</h1>
-      <div className="w-full max-w-full max-h-[calc(100vh-8rem)] flex items-center justify-center">
-        <Image
-          src="/img/placeholder_lot.jpeg"
-          alt="Parking lot"
-          width={1200}
-          height={800}
-          className="max-w-full max-h-full w-auto h-auto rounded object-contain"
-        />
-      </div>
-    </main>
+    <>
+      <header className="w-full border-b border-gray-200 bg-white">
+        <div className="container mx-auto flex items-center justify-between px-6 py-4">
+          <h1 className="text-2xl font-bold">Parking Lotter</h1>
+          <UserMenu />
+        </div>
+      </header>
+      <main className="flex flex-col items-center min-h-screen p-8">
+        <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+      </main>
+    </>
   );
 }
