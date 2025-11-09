@@ -3,6 +3,8 @@ from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
 import os, time, threading, json, uuid
+from datetime import datetime
+from collections import Counter
 load_dotenv()
 
 app = Flask(__name__)
