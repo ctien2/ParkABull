@@ -56,7 +56,11 @@ export default function FurnasLotPage() {
             rightSidebar={
                 <div className="p-6 flex flex-col h-full space-y-4">
                     <Button size="lg" className="w-full h-14 text-lg font-semibold">
-                        Submit Parking
+                        Submit Schedule
+                    </Button>
+
+                    <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive">
+                        Leaving Soon
                     </Button>
 
                     <Card className="flex-1 flex flex-col min-h-0">
