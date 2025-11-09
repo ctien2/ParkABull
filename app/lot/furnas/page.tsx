@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import FullPageMapbox from '@/components/map/full-page-mapbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -103,10 +102,9 @@ export default function FurnasLotPage() {
         return () => clearInterval(interval);
     }, []);
     return (
-        <FullPageMapbox
-            center={[-78.7863533685218, 43.00247044789438]}
-            zoom={18}
-            leftSidebar={
+        <div className="flex h-screen w-full">
+            {/* Left Sidebar */}
+            <div className="w-96 h-full overflow-y-auto border-r bg-background">
                 <div className="p-6 space-y-6">
                     <div>
                         <h1 className="text-3xl font-bold mb-2">Furnas Hall Parking</h1>
@@ -134,7 +132,6 @@ export default function FurnasLotPage() {
                     </Card>
 
                     <Card>
-
                         <CardContent className="space-y-4">
                             <p className="text-lg font-semibold">Lot Information</p>
 
@@ -155,8 +152,15 @@ export default function FurnasLotPage() {
                         </CardContent>
                     </Card>
                 </div>
-            }
-            rightSidebar={
+            </div>
+
+            {/* Middle Empty Space */}
+            <div className="flex-1 bg-muted/20">
+                {/* Empty space in the middle */}
+            </div>
+
+            {/* Right Sidebar */}
+            <div className="w-96 h-full overflow-y-auto border-l bg-background">
                 <div className="p-6 flex flex-col h-full space-y-4">
                     <Button size="lg" className="w-full h-14 text-lg font-semibold"
                         onClick={() => setDialogOpen(true)}>
@@ -210,7 +214,7 @@ export default function FurnasLotPage() {
 
                     <ListLeaving departures={departures} />
                 </div>
-            }
-        />
+            </div>
+        </div>
     );
 }
