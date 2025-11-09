@@ -1,3 +1,5 @@
+https://devpost.com/software/parkinglotter
+
 ## Inspiration
 As UB students, we find it frustrating circling a parking lot with scarce success in finding a parking spot. We wanted to create an app that solves this problem - we want to be able to check for availabilities from anywhere!
 
