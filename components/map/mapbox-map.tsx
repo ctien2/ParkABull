@@ -12,7 +12,7 @@ const parkingLotsGeoJSON = {
     {
       "type": "Feature",
       "properties": {
-        "name": "Furnas Hall Parking",
+        "name": "Furnas Parking Lot",
         "route": "/lot/furnas"
       },
       "geometry": {
@@ -31,7 +31,7 @@ const parkingLotsGeoJSON = {
     {
       "type": "Feature",
       "properties": {
-        "name": "Ketter Hall Parking",
+        "name": "Ketter Parking Lot",
         "route": "/lot/ketter"
       },
       "geometry": {
@@ -45,6 +45,42 @@ const parkingLotsGeoJSON = {
           ]
         ],
         "type": "Polygon"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Jarvis A Parking Lot",
+        "route": "/lot/jarvis-a"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            [-78.789121, 43.003432],
+            [-78.787814, 43.003432],
+            [-78.787814, 43.004264],
+            [-78.789121, 43.004264],
+          ]
+        ],
+        "type": "Rectangle"
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Jarvis B Parking Lot",
+        "route": "/lot/jarvis-b"
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            [-78.787600, 43.003434],
+            [-78.786355, 43.004263],
+            [-78.786355, 43.004263],
+            [-78.787600, 43.003434]
+          ]
+        ],
+        "type": "Rectangle"
       }
     }
   ]
