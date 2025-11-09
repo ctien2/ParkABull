@@ -213,14 +213,13 @@ export default function FurnasLotPage() {
                         }}
                         onLoadedMetadata={(e) => {
                             const target = e.target as HTMLVideoElement;
-                            target.playbackRate = 0.25; // Set to 0.25x speed (slow motion)
                             console.log('Video metadata loaded:', {
                                 duration: target.duration,
                                 videoWidth: target.videoWidth,
-                                videoHeight: target.videoHeight,
-                                playbackRate: target.playbackRate
+                                videoHeight: target.videoHeight
                             });
                         }}
+                        onCanPlay={() => console.log('Video can play')}
                         src="/parking_lot_video.mp4"
                     >
                         Your browser does not support the video tag.
