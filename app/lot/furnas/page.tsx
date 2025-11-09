@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import ListLeaving from '@/components/list-leaving';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function FurnasLotPage() {
     const [departures, setDepartures] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [departureTime, setDepartureTime] = useState('');
     const [hasClickedLeavingSoon, setHasClickedLeavingSoon] = useState(false);
@@ -59,6 +59,7 @@ export default function FurnasLotPage() {
         };
         
         requestLocation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Set current time when dialog opens
@@ -252,8 +253,6 @@ export default function FurnasLotPage() {
                 }
             } catch (error) {
                 console.error('Error fetching departures:', error);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -291,18 +290,20 @@ export default function FurnasLotPage() {
     return (
         <div className="flex h-screen w-full relative">
             {/* Home Button - Top Left */}
-            <a 
+            <Link 
                 href="/"
                 className="absolute top-4 left-4 z-50 flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 border border-gray-200"
                 title="Return to Home"
             >
-                <img 
+                <Image 
                     src="/img/logo.jpg" 
                     alt="Home" 
-                    className="w-10 h-10 rounded-md object-cover"
+                    width={40}
+                    height={40}
+                    className="rounded-md object-cover"
                 />
                 <span className="text-sm font-semibold text-gray-700">Home</span>
-            </a>
+            </Link>
 
             {/* Left Sidebar */}
             <div className="w-96 h-full overflow-y-auto border-r bg-background">
@@ -397,7 +398,7 @@ export default function FurnasLotPage() {
                             <DialogHeader>
                                 <DialogTitle>Submit Your Departure Schedule</DialogTitle>
                                 <DialogDescription>
-                                    Let others know when you'll be leaving.
+                                    Let others know when you&apos;ll be leaving.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6 py-6">
