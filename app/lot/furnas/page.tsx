@@ -313,7 +313,7 @@ export default function FurnasLotPage() {
                             <p className="text-lg font-semibold">Leaving Soon</p>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-4xl font-bold text-orange-600">{lotData.leaving_soon}</span>
-                                <span className="text-muted-foreground">/ {lotData.total_spots} spaces</span>
+                                {/* <span className="text-muted-foreground">/ {lotData.total_spots} spaces</span> */}
                             </div>
                         </CardContent>
                     </Card>
@@ -458,7 +458,7 @@ export default function FurnasLotPage() {
                     <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
                         onClick={handleLeavingSoon}
                         disabled={hasClickedLeavingSoon || !userLocation}>
-                        {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
+                        {hasClickedLeavingSoon ? 'I\'m Leaving Soon' : 'I\'m Leaving Soon'}
                     </Button>
 
                     <ListLeaving departures={departures} />
