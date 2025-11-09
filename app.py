@@ -2,7 +2,7 @@ from flask import Flask, request, Response, jsonify, Blueprint
 from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import os
+import os, time, threading
 load_dotenv()
 
 app = Flask(__name__)
@@ -115,24 +115,35 @@ def fetch_occupancy(lot_name):
     
 #     return jsonify({"departures": mock_departures}), 200
 
+def revert_increment(lot_name):
+    time.sleep(300)
+    lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
+    leaving_soon = lot_data.data[0].get('leaving_soon') 
+    supabase.table('lots').update({'leaving_soon': leaving_soon - 1}).eq('name', lot_name).execute()
+    
 @api.route('/leaving-soon', methods=['POST'])
 def leaving_soon():
-    print("\n=== LEAVING SOON CALLED ===")
-    print(f"Request URL: {request.url}")
-    print(f"Request Method: {request.method}")
+    # print("\n=== LEAVING SOON CALLED ===")
+    # print(f"Request URL: {request.url}")
+    # print(f"Request Method: {request.method}")
     
     data = request.get_json()
-    print(f"Request Body: {data}")
+    # print(f"Request Body: {data}")
     
     lot_name = data.get('lot_name')
     # supabase.table('lots').update({'name': lot_name}).eq('').execute()
-    print(f"Lot Name: {lot_name}")
+    # supabase.table('lots').update({'name': lot_name}).eq('', lot_name).execute()
+
+    # print(f"Lot Name: {lot_name}")
     
-    print(f"🔍 Updating Supabase for lot: {lot_name}")
-    supabase.table('lots').update({'name': lot_name}).eq('', lot_name).execute()
+    # print(f"🔍 Updating Supabase for lot: {lot_name}")
+    lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
+    leaving_soon = lot_data.data[0].get('leaving_soon')
+    supabase.table('lots').update({'leaving_soon': leaving_soon}).eq('name', lot_name).execute()
     
-    print("✅ SUCCESS: Lot status updated")
-    print("=== END LEAVING SOON ===\n")
+    threading.Thread(target=revert_increment, args=(lot_name,)).start()
+    # print("✅ SUCCESS: Lot status updated")
+    # print("=== END LEAVING SOON ===\n")
     
     return jsonify({"message": "Lot status updated."}), 200
 
