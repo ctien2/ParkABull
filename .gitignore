@@ -40,12 +40,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 computer_vision/*.pt
-*.jpg
 *.png
 myenv
 full_lot
 furnas_lot
 walmart*
 furnas-live-cv
-
-*.mp4
+computer_vision/images
+placeholder_lot.jpeg
