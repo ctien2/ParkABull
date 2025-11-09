@@ -20,6 +20,7 @@ export default function FurnasLotPage() {
         leaving_soon: 0,
         total_spots: 0
     });
+    const [videoError, setVideoError] = useState<string | null>(null);
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -191,9 +192,39 @@ export default function FurnasLotPage() {
                 </div>
             </div>
 
-            {/* Middle Empty Space */}
-            <div className="flex-1 bg-muted/20">
-                {/* Empty space in the middle */}
+            {/* Middle Video Section */}
+            <div className="flex-1 bg-muted/20 flex items-center justify-center p-6">
+                <div className="w-full h-full max-w-6xl max-h-full flex flex-col items-center justify-center gap-4">
+                    {videoError && (
+                        <div className="text-red-500 text-sm">{videoError}</div>
+                    )}
+                    <video 
+                        className="w-full h-full object-contain rounded-lg shadow-lg bg-black"
+                        controls
+                        loop
+                        muted
+                        autoPlay
+                        playsInline
+                        preload="auto"
+                        onError={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            console.error('Video error:', target.error);
+                            setVideoError(`Video error: ${target.error?.message || 'Unknown error'}`);
+                        }}
+                        onLoadedMetadata={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            console.log('Video metadata loaded:', {
+                                duration: target.duration,
+                                videoWidth: target.videoWidth,
+                                videoHeight: target.videoHeight
+                            });
+                        }}
+                        onCanPlay={() => console.log('Video can play')}
+                        src="/parking_lot_video.mp4"
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
             </div>
 
             {/* Right Sidebar */}
