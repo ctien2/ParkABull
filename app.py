@@ -356,6 +356,9 @@ def leaving_soon():
     data = request.get_json()
     print(f"Request Body: {data}")
     
+    if check_in_range(request) == False:
+        return jsonify({"message": "User not in range."}), 404
+
     lot_name = data.get('lot_name')
     # supabase.table('lots').update({'name': lot_name}).eq('').execute()
     # supabase.table('lots').update({'name': lot_name}).eq('', lot_name).execute()
@@ -401,6 +404,10 @@ def submit_schedule():
     lot_name = data.get('lot_name')
     print(f"Lot Name: {lot_name}")
     
+    if check_in_range(request) == False:
+        return jsonify({"message": "User not in range."}), 404
+
+
     # TODO: Add your schedule submission logic here
     print(f"🔍 Processing schedule for lot: {lot_name}")
     global global_id
