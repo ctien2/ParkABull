@@ -184,13 +184,13 @@ def leaving_soon():
     
     # Return updated lot data
     available = max_occ - occupancy
-    schedule = return_schedule_json(lot_name)
+    # schedule = return_schedule_json(lot_name)
     result = {
         "message": "Lot status updated.",
         "available_spots": available,
         "total_spots": max_occ,
         "leaving_soon": new_leaving_soon,
-        "departures": json.loads(schedule) if schedule else []
+        # "departures": json.loads(schedule) if schedule else []
     }
     
     return jsonify(result), 200

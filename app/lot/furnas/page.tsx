@@ -34,6 +34,11 @@ export default function FurnasLotPage() {
 
     // Handler functions - accessible throughout the component
     const handleSubmitSchedule = async () => {
+        if (!departureTime) {
+            console.error('Please select a departure time');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5001/api/submit-schedule', {
                 method: 'POST',
@@ -42,7 +47,7 @@ export default function FurnasLotPage() {
                 },
                 body: JSON.stringify({
                     lot_name: 'Furnas Hall Parking',
-                    // Add other data like departure time, spot number, etc.
+                    departure_time: departureTime,
                 }),
             });
 
@@ -52,6 +57,11 @@ export default function FurnasLotPage() {
 
             const data = await response.json();
             console.log('Schedule submitted:', data);
+            
+            // Close dialog and reset form
+            setDialogOpen(false);
+            setDepartureTime('');
+            
             // Show success message to user
         } catch (error) {
             console.error('Error submitting schedule:', error);
