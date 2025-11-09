@@ -123,27 +123,27 @@ def revert_increment(lot_name):
     
 @api.route('/leaving-soon', methods=['POST'])
 def leaving_soon():
-    # print("\n=== LEAVING SOON CALLED ===")
-    # print(f"Request URL: {request.url}")
-    # print(f"Request Method: {request.method}")
+    print("\n=== LEAVING SOON CALLED ===")
+    print(f"Request URL: {request.url}")
+    print(f"Request Method: {request.method}")
     
     data = request.get_json()
-    # print(f"Request Body: {data}")
+    print(f"Request Body: {data}")
     
     lot_name = data.get('lot_name')
     # supabase.table('lots').update({'name': lot_name}).eq('').execute()
     # supabase.table('lots').update({'name': lot_name}).eq('', lot_name).execute()
 
-    # print(f"Lot Name: {lot_name}")
+    print(f"Lot Name: {lot_name}")
     
-    # print(f"🔍 Updating Supabase for lot: {lot_name}")
+    print(f"🔍 Updating Supabase for lot: {lot_name}")
     lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
     leaving_soon = lot_data.data[0].get('leaving_soon')
-    supabase.table('lots').update({'leaving_soon': leaving_soon}).eq('name', lot_name).execute()
+    supabase.table('lots').update({'leaving_soon': leaving_soon+1}).eq('name', lot_name).execute()
     
     threading.Thread(target=revert_increment, args=(lot_name,)).start()
-    # print("✅ SUCCESS: Lot status updated")
-    # print("=== END LEAVING SOON ===\n")
+    print("✅ SUCCESS: Lot status updated")
+    print("=== END LEAVING SOON ===\n")
     
     return jsonify({"message": "Lot status updated."}), 200
 
