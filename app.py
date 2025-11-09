@@ -306,7 +306,7 @@ def fetch_occupancy(lot_name):
         "available_spots": available,
         "total_spots": max_occ,
         "leaving_soon": leaving_soon_count,
-        "departures": json.loads(schedule) if schedule else []
+        "departures": schedule if schedule else []
     }
     print(f"Returning: {result}")
     print("=== END FETCH OCCUPANCY ===\n")
