@@ -35,14 +35,30 @@ def check_in_range(request):
 @app.route('/lots/*', method = ['GET'])
 def fetch_occupancy():
     lot_name = request.args.get('name')
-    #error handling
 
-    occupancy = supabase.table("Lots").select("occupancy").eq("name", lot_name).execute()
-    max_occ = supabase.table("Lots").select("max_occupancy").eq("name", lot_name).execute()
-    if not occupancy.data or not max_occ.data:
-        return jsonify({"message": "User not found"}), 404
-    
-    available = occupancy - max_occ   
+    if not lot_name:
+        return jsonify({"error": "Missing 'name' query parameter"}), 400
+
+    response = supabase.table("Lots") \
+        .select("occupancy, max_occupancy") \
+        .eq("name", lot_name) \
+        .single() \
+        .execute()
+
+    if not response.data:
+        return jsonify({"error": f"Lot '{lot_name}' not found"}), 404
+
+    occupancy = response.data["occupancy"]
+    max_occ = response.data["max_occupancy"]
+
+    available = max_occ - occupancy
+
+    return jsonify({
+        "lot": lot_name,
+        "occupancy": occupancy,
+        "max_occupancy": max_occ,
+        "available": available
+    }), 200  
 
 @app.route('/leaving-soon', methods=['POST'])
 def leaving_soon():
