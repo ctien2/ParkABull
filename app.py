@@ -46,8 +46,28 @@ def check_in_range(request):
     return True 
 
 def return_schedule_json(lot_name, top_n=5):
-    schedules = supabase.table('schedules').select('*').execute().data
-    
+     # 1. Get lot_id for the given lot name
+    lot_data = supabase.table('lots') \
+        .select('id') \
+        .eq('name', lot_name) \
+        .single() \
+        .execute()
+
+    if not lot_data.data:
+        print(f"❌ Lot '{lot_name}' not found")
+        return []
+
+    lot_id = lot_data.data['id']
+
+    # 2. Fetch schedules for this specific lot
+    schedules = supabase.table('schedules') \
+        .select('time') \
+        .eq('lot_id', lot_id) \
+        .execute() \
+        .data
+
+    print(f"Fetched schedules for {lot_name}: {schedules}")
+
     if not schedules:
         return []
 
@@ -57,32 +77,29 @@ def return_schedule_json(lot_name, top_n=5):
         t = s.get('time')
 
         if not t:
-            continue  # skip null values
+            continue  # Skip null values
 
-        # Convert Supabase return type to a sortable string
-        if isinstance(t, str):
-            # Already a string, enforce HH:MM format
-            try:
-                dt = datetime.fromisoformat(t)
-                normalized_times.append(dt.strftime("%H:%M"))
-            except ValueError:
-                print("⚠️ Unexpected time string format:", t)
-                continue
-        elif isinstance(t, dtime):
-            # Supabase returned a Python time object
-            normalized_times.append(t.strftime("%H:%M"))
-        else:
-            print("⚠️ Unknown time type from DB:", type(t), t)
+        # ✅ Your DB stores "HH:MM", so convert to datetime to ensure sortable
+        try:
+            dt = datetime.strptime(t, "%H:%M:%S")
+            normalized_times.append(dt.strftime("%H:%M"))
+        except ValueError:
+            print("⚠️ Unexpected time format (expected HH:MM):", t)
             continue
 
-    # Count occurrences
+    if not normalized_times:
+        return []
+
+    # 3. Count occurrences of each time
     counter = Counter(normalized_times)
 
-    # Sort by time
+    # 4. Sort by time
     sorted_times = sorted(counter.items(), key=lambda x: x[0])
 
-    # Return list of objects
-    result = [{"time": t, "count": cnt} for t, cnt in sorted_times]
+    # 5. Create response array
+    result = [{"time": t, "count": cnt} for t, cnt in sorted_times[:top_n]]
+    
+    print("Returning formatted schedule:", result)
     return result
 
 #for any route within lots(example: "/api/lot/furnas")
