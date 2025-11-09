@@ -25,7 +25,7 @@ api = Blueprint('api', __name__, url_prefix='/api')
 url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 supabase: Client = create_client(url, key)
-
+global_id = 0
 
 # @app.route('/')
 # def home():
@@ -46,29 +46,43 @@ def check_in_range(request):
     return True 
 
 def return_schedule_json(lot_name, top_n=5):
-    # Get lot ID
-    lot_data = supabase.table('lots').select('id').eq('name', lot_name).single().execute()
-    lot_id = lot_data.data['id']
-
-    # Fetch schedules for this lot
-    schedules = supabase.table('schedules').select('time').eq('lot_id', lot_id).execute().data
+    schedules = supabase.table('schedules').select('*').execute().data
     
     if not schedules:
         return []
 
-    # Convert times to datetime and count occurrences
-    times = [datetime.fromisoformat(s['time']) for s in schedules]
-    counter = Counter(times)
+    normalized_times = []
 
-    # Sort by time (earliest first)
+    for s in schedules:
+        t = s.get('time')
+
+        if not t:
+            continue  # skip null values
+
+        # Convert Supabase return type to a sortable string
+        if isinstance(t, str):
+            # Already a string, enforce HH:MM format
+            try:
+                dt = datetime.fromisoformat(t)
+                normalized_times.append(dt.strftime("%H:%M"))
+            except ValueError:
+                print("⚠️ Unexpected time string format:", t)
+                continue
+        elif isinstance(t, dtime):
+            # Supabase returned a Python time object
+            normalized_times.append(t.strftime("%H:%M"))
+        else:
+            print("⚠️ Unknown time type from DB:", type(t), t)
+            continue
+
+    # Count occurrences
+    counter = Counter(normalized_times)
+
+    # Sort by time
     sorted_times = sorted(counter.items(), key=lambda x: x[0])
 
-    # Format response
-    result = [
-        { "time": t.isoformat(), "count": count }
-        for t, count in sorted_times[:top_n]
-    ]
-
+    # Return list of objects
+    result = [{"time": t, "count": cnt} for t, cnt in sorted_times]
     return result
 
 #for any route within lots(example: "/api/lot/furnas")
@@ -184,36 +198,38 @@ def leaving_soon():
     
     # Return updated lot data
     available = max_occ - occupancy
-    schedule = return_schedule_json(lot_name)
+    # schedule = return_schedule_json(lot_name)
     result = {
         "message": "Lot status updated.",
         "available_spots": available,
         "total_spots": max_occ,
         "leaving_soon": new_leaving_soon,
-        "departures": json.loads(schedule) if schedule else []
+        # "departures": json.loads(schedule) if schedule else []
     }
     
     return jsonify(result), 200
 
 @api.route('/submit-schedule', methods=['POST'])
 def submit_schedule():
-    # print("\n=== SUBMIT SCHEDULE CALLED ===")
-    # print(f"Request URL: {request.url}")
-    # print(f"Request Method: {request.method}")
+    print("\n=== SUBMIT SCHEDULE CALLED ===")
+    print(f"Request URL: {request.url}")
+    print(f"Request Method: {request.method}")
     
     data = request.get_json()
-    # print(f"Request Body: {data}")
+    print(f"Request Body: {data}")
     
     lot_name = data.get('lot_name')
-    # print(f"Lot Name: {lot_name}")
+    print(f"Lot Name: {lot_name}")
     
     # TODO: Add your schedule submission logic here
-    # print(f"🔍 Processing schedule for lot: {lot_name}")
-    id = uuid.uuid4()
+    print(f"🔍 Processing schedule for lot: {lot_name}")
+    global global_id
+    id = global_id
+    global_id+=1
     
     lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
     lot_id = lot_data.data[0].get('id')
-    time = data.get('time')
+    time = data.get('departure_time')
     supabase.table('schedules').insert({
         'id': id, 
         'lot_id': lot_id,
@@ -221,8 +237,8 @@ def submit_schedule():
         }).execute()
 
 
-    # print("✅ SUCCESS: Schedule submitted")
-    # print("=== END SUBMIT SCHEDULE ===\n")
+    print("✅ SUCCESS: Schedule submitted")
+    print("=== END SUBMIT SCHEDULE ===\n")
     
     return jsonify({"message": "Schedule submitted successfully."}), 200
 
