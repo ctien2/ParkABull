@@ -6,15 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import ListLeaving from '@/components/list-leaving';
 
 export default function FurnasLotPage() {
     const [departures, setDepartures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [departureTime, setDepartureTime] = useState('');
+    const [hasClickedLeavingSoon, setHasClickedLeavingSoon] = useState(false);
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -64,29 +65,11 @@ export default function FurnasLotPage() {
         // }
     };
 
-    const handleLeavingSoon = async () => {
-        try {
-            const response = await fetch('http://localhost:5001/api/leaving-soon', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    lot_name: 'Furnas Hall Parking',
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to update leaving status');
-            }
-
-            const data = await response.json();
-            console.log('Leaving soon updated:', data);
-            // Show success message to user
-        } catch (error) {
-            console.error('Error updating leaving status:', error);
-            // Show error message to user
-        }
+    const handleLeavingSoon = () => {
+        // Disable button after clicking
+        setHasClickedLeavingSoon(true);
+        console.log('Leaving soon clicked');
+        // TODO: Implement API call when backend is ready
     };
 
     // Fetch departures on component mount
@@ -220,86 +203,12 @@ export default function FurnasLotPage() {
                     </Dialog>
 
                     <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
-                        onClick={handleLeavingSoon}>
-                        Leaving Soon
+                        onClick={handleLeavingSoon}
+                        disabled={hasClickedLeavingSoon}>
+                        {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 
-                    <Card className="flex-1 flex flex-col min-h-0">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">Upcoming Departures</CardTitle>
-                            <CardDescription>Spots opening up soon</CardDescription>
-                        </CardHeader>
-                        <CardContent className="flex-1 min-h-0 pb-4">
-                            <ScrollArea className="h-full pr-4">
-                                <div className="space-y-3">
-                                    {/* Schedule Items */}
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section A - Spot 23</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 2:30 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">15 min</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section B - Spot 45</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 3:00 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">45 min</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section A - Spot 12</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 3:15 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">1 hr</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section C - Spot 67</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 4:00 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">1.5 hr</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section B - Spot 31</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 4:30 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">2 hr</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section A - Spot 8</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 5:00 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">2.5 hr</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section C - Spot 89</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 5:30 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">3 hr</Badge>
-                                    </div>
-
-                                    <div className="flex items-start justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium">Section B - Spot 54</p>
-                                            <p className="text-xs text-muted-foreground">Leaving at 6:00 PM</p>
-                                        </div>
-                                        <Badge variant="outline" className="text-xs">3.5 hr</Badge>
-                                    </div>
-                                </div>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
+                    <ListLeaving departures={departures} />
                 </div>
             }
         />
