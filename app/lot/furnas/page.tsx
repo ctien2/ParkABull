@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import ListLeaving from '@/components/list-leaving';
 
 export default function FurnasLotPage() {
+    // Get backend URL from environment variable
+    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+    
     const [departures, setDepartures] = useState([]);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -132,7 +135,7 @@ export default function FurnasLotPage() {
                 // Continue without location if it fails
             }
 
-            const response = await fetch('http://localhost:5001/api/submit-schedule', {
+            const response = await fetch(`${BACKEND_URL}/api/submit-schedule`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -178,7 +181,7 @@ export default function FurnasLotPage() {
 
         console.log('✅ Proceeding with leaving soon request...');
         try {
-            const response = await fetch('http://localhost:5001/api/leaving-soon', {
+            const response = await fetch(`${BACKEND_URL}/api/leaving-soon`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -228,7 +231,7 @@ export default function FurnasLotPage() {
 
         const fetchOccupancy = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas', {
+                const response = await fetch(`${BACKEND_URL}/api/lot/furnas?lot_name=Furnas`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

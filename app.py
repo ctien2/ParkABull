@@ -11,10 +11,13 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Get frontend URL from environment variable (for CORS)
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+
 # Configure CORS to allow requests from your Next.js frontend
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": [FRONTEND_URL],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
