@@ -145,8 +145,8 @@ export default function FurnasLotPage() {
 
         fetchOccupancy();
 
-        // Optional: Auto-refresh every 30 seconds for real-time updates
-        const interval = setInterval(fetchOccupancy, 30000);
+        // Auto-refresh every 5 seconds for real-time updates (matches backend CV update rate)
+        const interval = setInterval(fetchOccupancy, 5000);
         return () => clearInterval(interval);
     }, []);
     return (

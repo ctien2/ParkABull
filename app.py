@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import os, time, threading, json, uuid
 from datetime import datetime
 from collections import Counter
+import cv2
+from inference_sdk import InferenceHTTPClient
 load_dotenv()
 
 app = Flask(__name__)
@@ -26,6 +28,167 @@ url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 supabase: Client = create_client(url, key)
 global_id = 0
+
+# Initialize Roboflow client for CV
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
+CV_CLIENT = InferenceHTTPClient(
+    api_url="https://serverless.roboflow.com",
+    api_key=ROBOFLOW_API_KEY
+)
+MODEL_ID = "parking-d1qyt/1"
+VIDEO_PATH = "public/parking_lot_video_slow.mp4"
+CONFIDENCE_THRESHOLD = 0.28
+
+# Global flag to control the background thread
+cv_thread_running = False
+
+# ============================================
+# COMPUTER VISION BACKGROUND PROCESSING
+# ============================================
+
+def parse_prediction(pred):
+    """Interpret classes for the parking model."""
+    cls = pred["class"].lower().strip()
+    if cls == "free":
+        return "free"
+    if cls == "car":
+        return "occupied"
+    return "occupied"
+
+
+def analyze_frame_from_video(frame):
+    """
+    Analyze a video frame and return occupancy counts.
+    Saves frame temporarily for inference.
+    """
+    temp_frame_path = "temp_frame.jpg"
+    cv2.imwrite(temp_frame_path, frame)
+    
+    try:
+        result = CV_CLIENT.infer(temp_frame_path, model_id=MODEL_ID)
+        
+        free = 0
+        occupied = 0
+        
+        for pred in result.get("predictions", []):
+            if pred.get("confidence", 0) < CONFIDENCE_THRESHOLD:
+                continue
+            status = parse_prediction(pred)
+            if status == "free":
+                free += 1
+            else:
+                occupied += 1
+        
+        total = free + occupied
+        
+        # Clean up temp file
+        if os.path.exists(temp_frame_path):
+            os.remove(temp_frame_path)
+        
+        return {"free": free, "occupied": occupied, "total": total}
+    
+    except Exception as e:
+        print(f"❌ Error analyzing frame: {e}")
+        if os.path.exists(temp_frame_path):
+            os.remove(temp_frame_path)
+        return {"free": 0, "occupied": 0, "total": 0}
+
+
+def update_occupancy_in_db(lot_name, occupied_spots):
+    """
+    Update the occupancy field in the lots table.
+    Schema: occupancy = OCCUPIED spots, max_occupancy = total capacity
+    """
+    try:
+        # Update the lots table with new occupancy data
+        # occupancy = number of OCCUPIED spots (not free!)
+        # max_occupancy = total spots available
+        response = supabase.table('lots').update({
+            'occupancy': occupied_spots,      # Number of OCCUPIED spots
+        }).eq('name', lot_name).execute()
+        
+        print(f"✅ Updated DB")
+        return response
+    
+    except Exception as e:
+        print(f"❌ Error updating database: {e}")
+        return None
+
+
+def cv_background_worker():
+    """
+    Background thread that processes video frames every 5 seconds
+    and updates the database with occupancy data.
+    """
+    global cv_thread_running
+    
+    print("\n🎥 Starting CV background worker...")
+    print(f"📹 Video path: {VIDEO_PATH}")
+    print(f"🔄 Update interval: 5 seconds")
+    print(f"🎯 Model: {MODEL_ID}\n")
+    
+    if not os.path.exists(VIDEO_PATH):
+        print(f"❌ Video file not found: {VIDEO_PATH}")
+        return
+    
+    cap = cv2.VideoCapture(VIDEO_PATH)
+    
+    if not cap.isOpened():
+        print(f"❌ Could not open video: {VIDEO_PATH}")
+        return
+    
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_interval = int(fps * 5)  # Process every 5 seconds
+    
+    print(f"📊 Video info - FPS: {fps}, Total frames: {total_frames}")
+    
+    frame_count = 0
+    cv_thread_running = True
+    
+    try:
+        while cv_thread_running:
+            ret, frame = cap.read()
+            
+            if not ret:
+                # Loop back to start of video
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                frame_count = 0
+                print("🔄 Looping video back to start...")
+                continue
+            
+            # Process frame every 5 seconds worth of frames
+            if frame_count % frame_interval == 0:
+                print(f"\n🔍 Processing frame {frame_count}/{total_frames}...")
+                
+                # Analyze the frame
+                results = analyze_frame_from_video(frame)
+                
+                # Update database
+                update_occupancy_in_db(
+                    lot_name="Furnas",
+                    occupied_spots=results['occupied'],
+                )
+            
+            frame_count += 1
+            
+            # Small sleep to prevent CPU overuse
+            time.sleep(0.01)
+    
+    except Exception as e:
+        print(f"❌ Error in CV worker: {e}")
+    
+    finally:
+        cap.release()
+        print("\n🛑 CV background worker stopped.")
+
+
+def start_cv_worker():
+    """Start the CV background worker thread."""
+    worker_thread = threading.Thread(target=cv_background_worker, daemon=True)
+    worker_thread.start()
+    print("✅ CV worker thread started")
+
 
 # @app.route('/')
 # def home():
@@ -276,5 +439,8 @@ def get_live_cv_data():
 app.register_blueprint(api)
 
 if __name__ == '__main__':
+    # Start the CV background worker
+    start_cv_worker()
+    
     # Use port 5001 instead of 5000 (macOS AirPlay uses 5000)
     app.run(debug=True, port=5001)
