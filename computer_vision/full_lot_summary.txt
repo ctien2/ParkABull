@@ -1,0 +1,9 @@
+Parking Spot Detection - Model Comparison
+============================================================
+
+parking-lot-j4ojc/1: {free: 71, occupied: 229, total: 300}
+parking-space-ipm1b/4: {free: 11, occupied: 9, total: 20}
+parking-poang/1: {free: 0, occupied: 2, total: 2}
+parking-edoqv/1: {free: 0, occupied: 0, total: 0}
+parking-d1qyt/1: {free: 31, occupied: 230, total: 261}
+parking-lot-9sjil/2: {free: 0, occupied: 0, total: 0}
