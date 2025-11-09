@@ -460,10 +460,24 @@ def get_live_cv_data():
         print("=== END GET LIVE CV DATA ===\n")
         return jsonify({"error": str(e)}), 500
 
+
+def cleanup_expired_schedules():
+    while True:
+        try:
+            # delete any schedules where the time has passed
+            now = datetime.now().strftime("%H:%M:%S")
+            supabase.table('schedules').delete().lt('time', now).execute()
+        except Exception as e:
+            print("❌ Cleanup error:", e)
+
+        time.sleep(60)   # check once per minute
+
 # Register the blueprint
 app.register_blueprint(api)
 
 if __name__ == '__main__':
+    threading.Thread(target=cleanup_expired_schedules, daemon=True).start()
+
     # Start the CV background worker
     start_cv_worker()
     
