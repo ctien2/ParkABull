@@ -18,7 +18,7 @@ load_dotenv()
 # CONFIGURATION
 # ============================================
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
-MODEL_ID = "parking-lot-j4ojc/1"
+MODEL_ID = "parking-d1qyt/1"
 VIDEO_PATH = "parking_lot_video.mp4"  # Input video
 FRAME_INTERVAL = 1  # seconds between model analyses
 PLAYBACK_SPEED = 0.25  # Slow motion: 0.25 = 1/4 speed
@@ -30,6 +30,12 @@ LIVE_DATA_FILE = "live_parking_data.json"
 OUTPUT_VIDEO_PATH = "output_annotated_parking_video.mp4"  # Output video file
 EXPORT_FPS = 30  # FPS for output video
 AUTO_UNPAUSE_DELAY = 2  # Seconds to show pause message before auto-continuing
+
+# ============================================
+# ADJUSTABLE THRESHOLDS
+# ============================================
+CONFIDENCE_THRESHOLD = 0.5  # Minimum confidence (0.0 to 1.0) - filters predictions after inference
+# Note: Overlap/NMS filtering is handled by Roboflow API internally
 
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -60,20 +66,30 @@ def parse_prediction(pred):
 def analyze_frame(image_path):
     """
     Run inference on a single frame and return counts.
+    Uses CONFIDENCE_THRESHOLD and OVERLAP_THRESHOLD for filtering.
     
     Returns:
-        dict: {"free": int, "occupied": int, "total": int}
+        dict: {"free": int, "occupied": int, "total": int, "predictions": list}
     """
     print(f"🔍 Analyzing: {image_path}")
     
     try:
+        # Run inference - thresholds are applied post-processing
         result = CLIENT.infer(image_path, model_id=MODEL_ID)
         
         free = 0
         occupied = 0
+        filtered_predictions = []
 
+        # Apply confidence threshold and filter predictions
         for pred in result.get("predictions", []):
+            # Filter by confidence threshold
+            if pred.get("confidence", 0) < CONFIDENCE_THRESHOLD:
+                continue
+                
             status = parse_prediction(pred)
+            filtered_predictions.append(pred)
+            
             if status == "free":
                 free += 1
             else:
@@ -81,11 +97,14 @@ def analyze_frame(image_path):
 
         total = free + occupied
         
+        print(f"   ✅ Free: {free} | 🚗 Occupied: {occupied} | 🅿️  Total: {total}")
+        print(f"   📊 Confidence threshold: {CONFIDENCE_THRESHOLD} (applied post-processing)")
+        
         return {
             "free": free,
             "occupied": occupied,
             "total": total,
-            "predictions": result.get("predictions", [])
+            "predictions": filtered_predictions
         }
     
     except Exception as e:
@@ -113,6 +132,9 @@ def draw_predictions_on_frame(frame, predictions):
         width = int(pred.get("width", 0))
         height = int(pred.get("height", 0))
         
+        # Get confidence score
+        confidence = pred.get("confidence", 0)
+        
         # Calculate corner points
         x1 = int(x - width / 2)
         y1 = int(y - height / 2)
@@ -123,10 +145,10 @@ def draw_predictions_on_frame(frame, predictions):
         status = parse_prediction(pred)
         if status == "free":
             color = (0, 255, 0)  # Green for free
-            label = "FREE"
+            label = f"FREE {confidence:.2f}"
         else:
             color = (0, 0, 255)  # Red for occupied
-            label = "OCCUPIED"
+            label = f"OCCUPIED {confidence:.2f}"
         
         # Draw bounding box
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, 2)
@@ -134,10 +156,10 @@ def draw_predictions_on_frame(frame, predictions):
         # Draw label background
         label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)[0]
         cv2.rectangle(annotated, (x1, y1 - label_size[1] - 10), 
-                     (x1 + label_size[0], y1), color, -1)
+                     (x1 + label_size[0] + 10, y1), color, -1)
         
         # Draw label text
-        cv2.putText(annotated, label, (x1, y1 - 5), 
+        cv2.putText(annotated, label, (x1 + 5, y1 - 5), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
     
     return annotated
@@ -192,6 +214,10 @@ def process_video_auto_export(video_source=VIDEO_PATH):
     print(f"Playback speed: {PLAYBACK_SPEED}x (slow motion)")
     print(f"Output video: {OUTPUT_VIDEO_PATH}")
     print(f"Auto-unpause delay: {AUTO_UNPAUSE_DELAY} seconds")
+    print("="*60)
+    print("🎚️  DETECTION THRESHOLDS:")
+    print(f"   Confidence: {CONFIDENCE_THRESHOLD} (adjust in script)")
+    print(f"   Note: NMS/overlap filtering handled by Roboflow API")
     print("="*60 + "\n")
     
     # Initialize results log
