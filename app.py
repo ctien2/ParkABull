@@ -60,7 +60,7 @@ def fetch_occupancy(lot_name):
         return jsonify({"error": "Missing 'name' query parameter"}), 400
 
     print(f"🔍 Querying Supabase for lot: {lot_name}")
-    response = supabase.table("Lots") \
+    response = supabase.table("lots") \
         .select("occupancy, max_occupancy") \
         .eq("name", lot_name) \
         .single() \
