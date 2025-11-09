@@ -23,6 +23,7 @@ FRAME_INTERVAL = 1  # seconds between snapshots (1 = real-time updates every sec
 PLAYBACK_SPEED = 0.25  # Slow motion: 0.25 = 1/4 speed, 0.5 = 1/2 speed, 1.0 = normal speed
 OUTPUT_DIR = "video_frames"
 RESULTS_LOG = "video_detection_results.txt"
+LIVE_DATA_FILE = "live_parking_data.json"  # JSON file for live data sharing
 
 # Create output directory if it doesn't exist
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -134,6 +135,24 @@ def draw_predictions_on_frame(frame, predictions):
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
     
     return annotated
+
+
+def update_live_data(results, lot_name="Furnas Hall Parking"):
+    """Update the live data JSON file for web app consumption."""
+    live_data = {
+        "lot_name": lot_name,
+        "free": results['free'],
+        "occupied": results['occupied'],
+        "total": results['total'],
+        "timestamp": datetime.now().isoformat(),
+        "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    
+    try:
+        with open(LIVE_DATA_FILE, "w") as f:
+            json.dump(live_data, f, indent=2)
+    except Exception as e:
+        print(f"⚠️  Warning: Could not update live data file: {e}")
 
 
 def log_results(timestamp, frame_num, results):
@@ -266,6 +285,9 @@ def process_video(video_source=VIDEO_PATH):
                 print(f"   ✅ Free spots: {latest_results['free']}")
                 print(f"   🚗 Occupied spots: {latest_results['occupied']}")
                 print(f"   🅿️  Total spots: {latest_results['total']}")
+                
+                # Update live data JSON file for web app
+                update_live_data(latest_results)
                 
                 # Log results
                 log_results(timestamp, snapshot_count, latest_results)

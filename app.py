@@ -2,7 +2,7 @@ from flask import Flask, request, Response, jsonify, Blueprint
 from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import os, time, threading
+import os, time, threading, json
 load_dotenv()
 
 app = Flask(__name__)
@@ -166,6 +166,36 @@ def submit_schedule():
     print("=== END SUBMIT SCHEDULE ===\n")
     
     return jsonify({"message": "Schedule submitted successfully."}), 200
+
+@api.route('/lot/live-cv-data', methods=['GET'])
+def get_live_cv_data():
+    """Get live parking data from computer vision analysis."""
+    print("\n=== GET LIVE CV DATA CALLED ===")
+    
+    try:
+        # Read the live data JSON file created by video_parking_detector.py
+        json_path = os.path.join('computer_vision', 'live_parking_data.json')
+        
+        if not os.path.exists(json_path):
+            print("⚠️  Live data file not found - CV script may not be running")
+            return jsonify({
+                "error": "Live data not available",
+                "message": "Computer vision script is not running or hasn't analyzed any frames yet"
+            }), 404
+        
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+        
+        print(f"✅ SUCCESS: Returning live CV data")
+        print(f"   Free: {data.get('free', 0)}, Occupied: {data.get('occupied', 0)}, Total: {data.get('total', 0)}")
+        print("=== END GET LIVE CV DATA ===\n")
+        
+        return jsonify(data), 200
+        
+    except Exception as e:
+        print(f"❌ ERROR: {str(e)}")
+        print("=== END GET LIVE CV DATA ===\n")
+        return jsonify({"error": str(e)}), 500
 
 # Register the blueprint
 app.register_blueprint(api)
