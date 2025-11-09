@@ -195,18 +195,18 @@ def start_cv_worker():
 #     return render_template('index.html', message="Hello, Flask!")
 
 
-def check_in_range(request):
-    data = request.get_json()
-    user_latitude = data.get('user_latitude')
-    user_longitude = data.get('user_longitude')
-    lot_name = data.get('lot_name')
-    lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
-    lot_latitude = lot_data.data[0]['latitude'] 
-    lot_longitude = lot_data.data[0]['longitude']
-    if abs(lot_latitude - user_latitude) > 0.005 or abs(lot_longitude - user_longitude) > 0.005:
-        Response.status_code = 404
-        return False
-    return True 
+# def check_in_range(request):
+#     data = request.get_json()
+#     user_latitude = data.get('user_latitude')
+#     user_longitude = data.get('user_longitude')
+#     lot_name = data.get('lot_name')
+#     lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
+#     lot_latitude = lot_data.data[0]['latitude'] 
+#     lot_longitude = lot_data.data[0]['longitude']
+#     if abs(lot_latitude - user_latitude) > 0.005 or abs(lot_longitude - user_longitude) > 0.005:
+#         Response.status_code = 404
+#         return False
+#     return True 
 
 def return_schedule_json(lot_name, top_n=5):
      # 1. Get lot_id for the given lot name
@@ -356,7 +356,10 @@ def leaving_soon():
     data = request.get_json()
     print(f"Request Body: {data}")
     
+<<<<<<< Updated upstream
     # Temporarily disabled for testing - uncomment to re-enable range check
+=======
+>>>>>>> Stashed changes
     # if check_in_range(request) == False:
     #     return jsonify({"message": "User not in range."}), 404
 
@@ -405,8 +408,8 @@ def submit_schedule():
     lot_name = data.get('lot_name')
     print(f"Lot Name: {lot_name}")
     
-    if check_in_range(request) == False:
-        return jsonify({"message": "User not in range."}), 404
+    # if check_in_range(request) == False:
+    #     return jsonify({"message": "User not in range."}), 404
 
 
     # TODO: Add your schedule submission logic here
