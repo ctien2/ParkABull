@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { SignInButton } from './sign-in-button'
 import { SignOutButton } from './sign-out-button'
+import Image from "next/image";
+
 
 export async function UserMenu() {
   const supabase = await createClient()
@@ -14,10 +16,13 @@ export async function UserMenu() {
     <div className="flex items-center gap-4">
       <div className="flex items-center gap-2">
         {user.user_metadata?.avatar_url && (
-          <img
+          <Image
             src={user.user_metadata.avatar_url}
-            alt={user.user_metadata?.full_name || 'User avatar'}
-            className="w-8 h-8 rounded-full"
+            alt={user.user_metadata?.full_name || "User avatar"}
+            width={32}
+            height={32}
+            unoptimized
+            className="rounded-full"
           />
         )}
         <span className="text-sm font-medium">
