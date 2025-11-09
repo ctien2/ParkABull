@@ -20,6 +20,46 @@ export default function KetterLotPage() {
         leaving_soon: 0,
         total_spots: 0
     });
+    const [videoError, setVideoError] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [locationError, setLocationError] = useState<string | null>(null);
+    const [isInRange, setIsInRange] = useState<boolean>(false);
+    const [locationChecked, setLocationChecked] = useState<boolean>(false);
+
+    // Ketter Hall Parking lot coordinates (you can adjust these)
+    const LOT_LATITUDE = 43.002519;
+    const LOT_LONGITUDE = -78.788894;
+    const RANGE_THRESHOLD = 10; // Very large threshold for testing - accepts any location
+
+    // Check if user is in range of the parking lot
+    const checkIfInRange = (userLat: number, userLon: number): boolean => {
+        const latDiff = Math.abs(LOT_LATITUDE - userLat);
+        const lonDiff = Math.abs(LOT_LONGITUDE - userLon);
+        return latDiff <= RANGE_THRESHOLD && lonDiff <= RANGE_THRESHOLD;
+    };
+
+    // Request location on page load
+    useEffect(() => {
+        const requestLocation = async () => {
+            try {
+                const location = await getUserLocation();
+                const inRange = checkIfInRange(location.latitude, location.longitude);
+                setIsInRange(inRange);
+                setUserLocation(location);
+                console.log('✅ Location obtained:', location, 'In range:', inRange);
+                console.log('✅ userLocation state will be set to:', location);
+            } catch (error) {
+                console.error('❌ Location error:', error);
+                setLocationError(error instanceof Error ? error.message : 'Failed to get location');
+                setIsInRange(false);
+            } finally {
+                setLocationChecked(true);
+                console.log('✅ Location check complete');
+            }
+        };
+        
+        requestLocation();
+    }, []);
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -31,17 +71,76 @@ export default function KetterLotPage() {
         }
     }, [dialogOpen, departureTime]);
 
+    // Get user location
+    const getUserLocation = (): Promise<{ latitude: number; longitude: number }> => {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation is not supported by your browser'));
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    setUserLocation(location);
+                    setLocationError(null);
+                    resolve(location);
+                },
+                (error) => {
+                    let errorMessage = 'Unable to retrieve location';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission denied';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out';
+                            break;
+                    }
+                    setLocationError(errorMessage);
+                    reject(new Error(errorMessage));
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        });
+    };
+
     // Handler functions - accessible throughout the component
     const handleSubmitSchedule = async () => {
+        if (!departureTime) {
+            console.error('Please select a departure time');
+            return;
+        }
+
         try {
+            // Get user location
+            let location;
+            try {
+                location = await getUserLocation();
+                console.log('User location obtained:', location);
+            } catch (locationErr) {
+                console.warn('Could not get location:', locationErr);
+                // Continue without location if it fails
+            }
+
             const response = await fetch('http://localhost:5001/api/submit-schedule', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    lot_name: 'Ketter Hall Parking',
-                    // Add other data like departure time, spot number, etc.
+                    lot_name: 'Ketter',
+                    departure_time: departureTime,
+                    location: location || null, // Include location if available
                 }),
             });
 
@@ -51,6 +150,12 @@ export default function KetterLotPage() {
 
             const data = await response.json();
             console.log('Schedule submitted:', data);
+
+            // Close dialog and reset form
+            setDialogOpen(false);
+            setDepartureTime('');
+            setLocationError(null);
+
             // Show success message to user
         } catch (error) {
             console.error('Error submitting schedule:', error);
@@ -59,6 +164,19 @@ export default function KetterLotPage() {
     };
 
     const handleLeavingSoon = async () => {
+        console.log('🔵 Button clicked! Current state:', {
+            userLocation,
+            hasClickedLeavingSoon,
+            isInRange
+        });
+        
+        // Check if user has location
+        if (!userLocation) {
+            console.error('❌ Cannot use Leaving Soon: no location');
+            return;
+        }
+
+        console.log('✅ Proceeding with leaving soon request...');
         try {
             const response = await fetch('http://localhost:5001/api/leaving-soon', {
                 method: 'POST',
@@ -67,6 +185,8 @@ export default function KetterLotPage() {
                 },
                 body: JSON.stringify({
                     lot_name: 'Ketter',
+                    user_latitude: userLocation.latitude,
+                    user_longitude: userLocation.longitude,
                 }),
             });
 
@@ -82,7 +202,7 @@ export default function KetterLotPage() {
                 setLotData({
                     available_spots: data.available_spots,
                     leaving_soon: data.leaving_soon || 0,
-                    total_spots: data.total_spots || 124
+                    total_spots: data.total_spots || 150
                 });
             }
 
@@ -99,8 +219,13 @@ export default function KetterLotPage() {
         }
     };
 
-    // Fetch departures on component mount
+    // Fetch departures on component mount - only after location is checked
     useEffect(() => {
+        // Don't fetch data until location permission has been resolved
+        if (!locationChecked) {
+            return;
+        }
+
         const fetchOccupancy = async () => {
             try {
                 const response = await fetch('http://localhost:5001/api/lot/ketter?lot_name=Ketter', {
@@ -122,7 +247,7 @@ export default function KetterLotPage() {
                     setLotData({
                         available_spots: data.available_spots,
                         leaving_soon: data.leaving_soon || 0,
-                        total_spots: data.total_spots || 124
+                        total_spots: data.total_spots || 150
                     });
                 }
             } catch (error) {
@@ -134,17 +259,42 @@ export default function KetterLotPage() {
 
         fetchOccupancy();
 
-        // Optional: Auto-refresh every 30 seconds for real-time updates
-        const interval = setInterval(fetchOccupancy, 30000);
+        // Auto-refresh every 5 seconds for real-time updates (matches backend CV update rate)
+        const interval = setInterval(fetchOccupancy, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [locationChecked]);
+
+    // Show loading screen while waiting for location permission
+    if (!locationChecked) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Card className="w-96">
+                    <CardHeader>
+                        <CardTitle>Location Permission Required</CardTitle>
+                        <CardDescription>
+                            Please allow location access to use this parking service
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-center p-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                        <p className="text-sm text-muted-foreground text-center">
+                            Waiting for location permission...
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen w-full">
             {/* Left Sidebar */}
             <div className="w-96 h-full overflow-y-auto border-r bg-background">
                 <div className="p-6 space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Ketter Hall Parking</h1>
+                        <h1 className="text-3xl font-bold mb-2">Ketter Parking Lot</h1>
                         <p className="text-sm text-muted-foreground">University at Buffalo - North Campus</p>
                     </div>
 
@@ -178,26 +328,46 @@ export default function KetterLotPage() {
                             </div>
                             <Separator />
                             <div>
-                                <h4 className="font-semibold text-sm mb-1">Parking Fee</h4>
-                                <p className="text-sm text-muted-foreground">$2.50/hour • $15.00/day</p>
-                            </div>
-                            <Separator />
-                            <div>
                                 <h4 className="font-semibold text-sm mb-1">Permit Required</h4>
-                                <p className="text-sm text-muted-foreground">Blue or Gold permit</p>
+                                <p className="text-sm text-muted-foreground">Faculty permit required 8am to 3pm.</p>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
 
-            {/* Middle Empty Space */}
-            <div className="flex-1 bg-muted/20 flex items-center justify-center">
-                <img
-                    src="/img/ketter_lot.png"
-                    alt="Ketter Parking Lot"
-                    className="w-full h-full object-cover"
-                />
+            {/* Middle Video Section */}
+            <div className="flex-1 bg-muted/20 flex items-center justify-center p-6">
+                <div className="w-full h-full max-w-6xl max-h-full flex flex-col items-center justify-center gap-4">
+                    {videoError && (
+                        <div className="text-red-500 text-sm">{videoError}</div>
+                    )}
+                    <video
+                        className="w-full h-full object-cover rounded-lg shadow-lg bg-black"
+                        loop
+                        muted
+                        autoPlay
+                        playsInline
+                        preload="auto"
+                        onError={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            console.error('Video error:', target.error);
+                            setVideoError(`Video error: ${target.error?.message || 'Unknown error'}`);
+                        }}
+                        onLoadedMetadata={(e) => {
+                            const target = e.target as HTMLVideoElement;
+                            console.log('Video metadata loaded:', {
+                                duration: target.duration,
+                                videoWidth: target.videoWidth,
+                                videoHeight: target.videoHeight
+                            });
+                        }}
+                        onCanPlay={() => console.log('Video can play')}
+                        src="/parking_lot_video_slow.mp4"
+                    >
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
             </div>
 
             {/* Right Sidebar */}
@@ -235,6 +405,21 @@ export default function KetterLotPage() {
                                         Select when you plan to leave the parking lot
                                     </p>
                                 </div>
+                                <div className="space-y-2">
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        📍 Your location will be shared when submitting
+                                    </p>
+                                    {locationError && (
+                                        <p className="text-xs text-red-500 text-center">
+                                            {locationError}
+                                        </p>
+                                    )}
+                                    {userLocation && (
+                                        <p className="text-xs text-green-600 text-center">
+                                            ✓ Location obtained
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <DialogFooter className="gap-2 sm:gap-0">
                                 <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">
@@ -247,13 +432,36 @@ export default function KetterLotPage() {
                         </DialogContent>
                     </Dialog>
 
+                    {/* Location Warning */}
+                    {locationError && (
+                        <Card className="border-orange-500">
+                            <CardContent className="pt-6">
+                                <p className="text-sm text-orange-600 font-semibold">⚠️ Location Required</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Please enable location services to use the "Leaving Soon" feature.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {userLocation && !isInRange && (
+                        <Card className="border-red-500">
+                            <CardContent className="pt-6">
+                                <p className="text-sm text-red-600 font-semibold">🚫 Out of Range</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    You must be at the parking lot to use the "Leaving Soon" feature.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
                         onClick={handleLeavingSoon}
-                        disabled={hasClickedLeavingSoon}>
+                        disabled={hasClickedLeavingSoon || !userLocation}>
                         {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 
-                    <ListLeaving />
+                    <ListLeaving departures={departures} />
                 </div>
             </div>
         </div>
