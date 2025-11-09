@@ -294,7 +294,7 @@ export default function FurnasLotPage() {
             <div className="w-96 h-full overflow-y-auto border-r bg-background">
                 <div className="p-6 space-y-6">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Furnas Hall Parking</h1>
+                        <h1 className="text-3xl font-bold mb-2">Furnas Parking Lot</h1>
                         <p className="text-sm text-muted-foreground">University at Buffalo - North Campus</p>
                     </div>
 
