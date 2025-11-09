@@ -61,7 +61,7 @@ export default function FurnasLotPage() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        lot_name: 'Furnas Hall Parking',
+                        lot_name: 'Furnas',
                     }),
                 });
 
