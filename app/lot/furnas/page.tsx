@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import ListLeaving from '@/components/list-leaving';
 
+// Get API URL from environment variable
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
 export default function FurnasLotPage() {
     const [departures, setDepartures] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -40,7 +43,7 @@ export default function FurnasLotPage() {
 
         // TODO: Implement API call
         // try {
-        //     const response = await fetch('http://localhost:5001/api/submit-schedule', {
+        //     const response = await fetch(`${API_URL}/api/submit-schedule`, {
         //         method: 'POST',
         //         headers: {
         //             'Content-Type': 'application/json',
@@ -75,7 +78,7 @@ export default function FurnasLotPage() {
     useEffect(() => {
         const fetchOccupancy = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas', {
+                const response = await fetch(`${API_URL}/api/lot/furnas?lot_name=Furnas`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

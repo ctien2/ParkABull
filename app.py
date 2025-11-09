@@ -8,9 +8,11 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure CORS to allow requests from your Next.js frontend
+# Get allowed origins from environment variable, fallback to localhost for development
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": allowed_origins,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -20,8 +22,9 @@ CORS(app, resources={
 # Create a Blueprint with /api prefix
 api = Blueprint('api', __name__, url_prefix='/api')
 
-url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-key = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+# Supabase configuration - use environment variables
+url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 supabase: Client = create_client(url, key)
 
 
@@ -201,5 +204,8 @@ def get_live_cv_data():
 app.register_blueprint(api)
 
 if __name__ == '__main__':
-    # Use port 5001 instead of 5000 (macOS AirPlay uses 5000)
-    app.run(debug=True, port=5001)
+    # Get port from environment variable or default to 5001
+    port = int(os.getenv("PORT", 5001))
+    # Get debug mode from environment (False in production)
+    debug = os.getenv("FLASK_ENV") != "production"
+    app.run(debug=debug, host='0.0.0.0', port=port)
