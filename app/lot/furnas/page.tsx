@@ -23,6 +23,41 @@ export default function FurnasLotPage() {
     const [videoError, setVideoError] = useState<string | null>(null);
     const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [locationError, setLocationError] = useState<string | null>(null);
+    const [isInRange, setIsInRange] = useState<boolean>(false);
+    const [locationChecked, setLocationChecked] = useState<boolean>(false);
+
+    // Furnas Hall Parking lot coordinates (you can adjust these)
+    const LOT_LATITUDE = 43.002508;
+    const LOT_LONGITUDE = -78.786328;
+    const RANGE_THRESHOLD = 0.005; // ~500 meters
+
+    // Check if user is in range of the parking lot
+    const checkIfInRange = (userLat: number, userLon: number): boolean => {
+        const latDiff = Math.abs(LOT_LATITUDE - userLat);
+        const lonDiff = Math.abs(LOT_LONGITUDE - userLon);
+        return latDiff <= RANGE_THRESHOLD && lonDiff <= RANGE_THRESHOLD;
+    };
+
+    // Request location on page load
+    useEffect(() => {
+        const requestLocation = async () => {
+            try {
+                const location = await getUserLocation();
+                const inRange = checkIfInRange(location.latitude, location.longitude);
+                setIsInRange(inRange);
+                setUserLocation(location);
+                console.log('Location obtained:', location, 'In range:', inRange);
+            } catch (error) {
+                console.error('Location error:', error);
+                setLocationError(error instanceof Error ? error.message : 'Failed to get location');
+                setIsInRange(false);
+            } finally {
+                setLocationChecked(true);
+            }
+        };
+        
+        requestLocation();
+    }, []);
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -127,6 +162,12 @@ export default function FurnasLotPage() {
     };
 
     const handleLeavingSoon = async () => {
+        // Check if user has location and is in range
+        if (!userLocation || !isInRange) {
+            console.error('Cannot use Leaving Soon: not in range or no location');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5001/api/leaving-soon', {
                 method: 'POST',
@@ -135,6 +176,8 @@ export default function FurnasLotPage() {
                 },
                 body: JSON.stringify({
                     lot_name: 'Furnas',
+                    user_latitude: userLocation.latitude,
+                    user_longitude: userLocation.longitude,
                 }),
             });
 
@@ -167,8 +210,13 @@ export default function FurnasLotPage() {
         }
     };
 
-    // Fetch departures on component mount
+    // Fetch departures on component mount - only after location is checked
     useEffect(() => {
+        // Don't fetch data until location permission has been resolved
+        if (!locationChecked) {
+            return;
+        }
+
         const fetchOccupancy = async () => {
             try {
                 const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas', {
@@ -205,7 +253,32 @@ export default function FurnasLotPage() {
         // Auto-refresh every 5 seconds for real-time updates (matches backend CV update rate)
         const interval = setInterval(fetchOccupancy, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [locationChecked]);
+
+    // Show loading screen while waiting for location permission
+    if (!locationChecked) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-background">
+                <Card className="w-96">
+                    <CardHeader>
+                        <CardTitle>Location Permission Required</CardTitle>
+                        <CardDescription>
+                            Please allow location access to use this parking service
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-center p-4">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                        <p className="text-sm text-muted-foreground text-center">
+                            Waiting for location permission...
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-screen w-full">
             {/* Left Sidebar */}
@@ -355,9 +428,32 @@ export default function FurnasLotPage() {
                         </DialogContent>
                     </Dialog>
 
+                    {/* Location Warning */}
+                    {locationError && (
+                        <Card className="border-orange-500">
+                            <CardContent className="pt-6">
+                                <p className="text-sm text-orange-600 font-semibold">⚠️ Location Required</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Please enable location services to use the "Leaving Soon" feature.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {userLocation && !isInRange && (
+                        <Card className="border-red-500">
+                            <CardContent className="pt-6">
+                                <p className="text-sm text-red-600 font-semibold">🚫 Out of Range</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    You must be at the parking lot to use the "Leaving Soon" feature.
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
                         onClick={handleLeavingSoon}
-                        disabled={hasClickedLeavingSoon}>
+                        disabled={hasClickedLeavingSoon || !userLocation || !isInRange}>
                         {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 
