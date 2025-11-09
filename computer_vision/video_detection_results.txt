@@ -1,23 +1,114 @@
-PARKING SPOT DETECTION - VIDEO ANALYSIS
+PARKING SPOT DETECTION - VIDEO ANALYSIS (AUTO EXPORT)
 ============================================================
 
 ============================================================
-Timestamp: 2025-11-09_00-03-32
+Timestamp: 2025-11-09_01-09-20
 Frame: 1
 ✅ Free spots: 5
 🚗 Occupied spots: 121
 🅿️  Total spots: 126
 
 ============================================================
-Timestamp: 2025-11-09_00-03-38
+Timestamp: 2025-11-09_01-09-22
 Frame: 2
 ✅ Free spots: 4
 🚗 Occupied spots: 112
 🅿️  Total spots: 116
 
 ============================================================
-Timestamp: 2025-11-09_00-03-46
+Timestamp: 2025-11-09_01-09-25
 Frame: 3
 ✅ Free spots: 6
+🚗 Occupied spots: 125
+🅿️  Total spots: 131
+
+============================================================
+Timestamp: 2025-11-09_01-09-26
+Frame: 4
+✅ Free spots: 7
 🚗 Occupied spots: 124
+🅿️  Total spots: 131
+
+============================================================
+Timestamp: 2025-11-09_01-09-28
+Frame: 5
+✅ Free spots: 7
+🚗 Occupied spots: 124
+🅿️  Total spots: 131
+
+============================================================
+Timestamp: 2025-11-09_01-09-30
+Frame: 6
+✅ Free spots: 6
+🚗 Occupied spots: 122
+🅿️  Total spots: 128
+
+============================================================
+Timestamp: 2025-11-09_01-09-31
+Frame: 7
+✅ Free spots: 8
+🚗 Occupied spots: 124
+🅿️  Total spots: 132
+
+============================================================
+Timestamp: 2025-11-09_01-09-32
+Frame: 8
+✅ Free spots: 8
+🚗 Occupied spots: 118
+🅿️  Total spots: 126
+
+============================================================
+Timestamp: 2025-11-09_01-09-33
+Frame: 9
+✅ Free spots: 7
+🚗 Occupied spots: 123
 🅿️  Total spots: 130
+
+============================================================
+Timestamp: 2025-11-09_01-09-36
+Frame: 10
+✅ Free spots: 8
+🚗 Occupied spots: 106
+🅿️  Total spots: 114
+
+============================================================
+Timestamp: 2025-11-09_01-09-37
+Frame: 11
+✅ Free spots: 6
+🚗 Occupied spots: 115
+🅿️  Total spots: 121
+
+============================================================
+Timestamp: 2025-11-09_01-09-39
+Frame: 12
+✅ Free spots: 8
+🚗 Occupied spots: 121
+🅿️  Total spots: 129
+
+============================================================
+Timestamp: 2025-11-09_01-09-41
+Frame: 13
+✅ Free spots: 10
+🚗 Occupied spots: 101
+🅿️  Total spots: 111
+
+============================================================
+Timestamp: 2025-11-09_01-09-42
+Frame: 14
+✅ Free spots: 7
+🚗 Occupied spots: 109
+🅿️  Total spots: 116
+
+============================================================
+Timestamp: 2025-11-09_01-09-43
+Frame: 15
+✅ Free spots: 8
+🚗 Occupied spots: 113
+🅿️  Total spots: 121
+
+============================================================
+Timestamp: 2025-11-09_01-09-46
+Frame: 16
+✅ Free spots: 8
+🚗 Occupied spots: 125
+🅿️  Total spots: 133

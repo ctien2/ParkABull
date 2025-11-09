@@ -1,8 +1,8 @@
 {
   "lot_name": "Furnas Hall Parking",
-  "free": 0,
-  "occupied": 0,
-  "total": 0,
-  "timestamp": "",
-  "last_updated": ""
+  "free": 8,
+  "occupied": 125,
+  "total": 133,
+  "timestamp": "2025-11-09T01:09:46.981370",
+  "last_updated": "2025-11-09 01:09:46"
 }
