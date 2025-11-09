@@ -29,7 +29,7 @@ export default function FurnasLotPage() {
     // Furnas Hall Parking lot coordinates (you can adjust these)
     const LOT_LATITUDE = 43.002508;
     const LOT_LONGITUDE = -78.786328;
-    const RANGE_THRESHOLD = 0.005; // ~500 meters
+    const RANGE_THRESHOLD = 10; // Very large threshold for testing - accepts any location
 
     // Check if user is in range of the parking lot
     const checkIfInRange = (userLat: number, userLon: number): boolean => {
@@ -46,13 +46,15 @@ export default function FurnasLotPage() {
                 const inRange = checkIfInRange(location.latitude, location.longitude);
                 setIsInRange(inRange);
                 setUserLocation(location);
-                console.log('Location obtained:', location, 'In range:', inRange);
+                console.log('✅ Location obtained:', location, 'In range:', inRange);
+                console.log('✅ userLocation state will be set to:', location);
             } catch (error) {
-                console.error('Location error:', error);
+                console.error('❌ Location error:', error);
                 setLocationError(error instanceof Error ? error.message : 'Failed to get location');
                 setIsInRange(false);
             } finally {
                 setLocationChecked(true);
+                console.log('✅ Location check complete');
             }
         };
         
@@ -162,12 +164,19 @@ export default function FurnasLotPage() {
     };
 
     const handleLeavingSoon = async () => {
-        // Check if user has location and is in range
-        if (!userLocation || !isInRange) {
-            console.error('Cannot use Leaving Soon: not in range or no location');
+        console.log('🔵 Button clicked! Current state:', {
+            userLocation,
+            hasClickedLeavingSoon,
+            isInRange
+        });
+        
+        // Check if user has location
+        if (!userLocation) {
+            console.error('❌ Cannot use Leaving Soon: no location');
             return;
         }
 
+        console.log('✅ Proceeding with leaving soon request...');
         try {
             const response = await fetch('http://localhost:5001/api/leaving-soon', {
                 method: 'POST',
@@ -453,7 +462,7 @@ export default function FurnasLotPage() {
 
                     <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
                         onClick={handleLeavingSoon}
-                        disabled={hasClickedLeavingSoon || !userLocation || !isInRange}>
+                        disabled={hasClickedLeavingSoon || !userLocation}>
                         {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 

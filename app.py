@@ -154,12 +154,12 @@ def cv_background_worker():
                 # Loop back to start of video
                 cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
                 frame_count = 0
-                print("🔄 Looping video back to start...")
+                # print("🔄 Looping video back to start...")
                 continue
             
             # Process frame every 5 seconds worth of frames
             if frame_count % frame_interval == 0:
-                print(f"\n🔍 Processing frame {frame_count}/{total_frames}...")
+                # print(f"\n🔍 Processing frame {frame_count}/{total_frames}...")
                 
                 # Analyze the frame
                 results = analyze_frame_from_video(frame)
@@ -356,8 +356,9 @@ def leaving_soon():
     data = request.get_json()
     print(f"Request Body: {data}")
     
-    if check_in_range(request) == False:
-        return jsonify({"message": "User not in range."}), 404
+    # Temporarily disabled for testing - uncomment to re-enable range check
+    # if check_in_range(request) == False:
+    #     return jsonify({"message": "User not in range."}), 404
 
     lot_name = data.get('lot_name')
     # supabase.table('lots').update({'name': lot_name}).eq('').execute()
