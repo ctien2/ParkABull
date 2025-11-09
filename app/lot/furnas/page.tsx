@@ -21,6 +21,8 @@ export default function FurnasLotPage() {
         total_spots: 0
     });
     const [videoError, setVideoError] = useState<string | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [locationError, setLocationError] = useState<string | null>(null);
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -32,6 +34,49 @@ export default function FurnasLotPage() {
         }
     }, [dialogOpen, departureTime]);
 
+    // Get user location
+    const getUserLocation = (): Promise<{ latitude: number; longitude: number }> => {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation is not supported by your browser'));
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    setUserLocation(location);
+                    setLocationError(null);
+                    resolve(location);
+                },
+                (error) => {
+                    let errorMessage = 'Unable to retrieve location';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission denied';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out';
+                            break;
+                    }
+                    setLocationError(errorMessage);
+                    reject(new Error(errorMessage));
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+        });
+    };
+
     // Handler functions - accessible throughout the component
     const handleSubmitSchedule = async () => {
         if (!departureTime) {
@@ -40,6 +85,16 @@ export default function FurnasLotPage() {
         }
 
         try {
+            // Get user location
+            let location;
+            try {
+                location = await getUserLocation();
+                console.log('User location obtained:', location);
+            } catch (locationErr) {
+                console.warn('Could not get location:', locationErr);
+                // Continue without location if it fails
+            }
+
             const response = await fetch('http://localhost:5001/api/submit-schedule', {
                 method: 'POST',
                 headers: {
@@ -48,6 +103,7 @@ export default function FurnasLotPage() {
                 body: JSON.stringify({
                     lot_name: 'Furnas',
                     departure_time: departureTime,
+                    location: location || null, // Include location if available
                 }),
             });
 
@@ -57,11 +113,12 @@ export default function FurnasLotPage() {
 
             const data = await response.json();
             console.log('Schedule submitted:', data);
-            
+
             // Close dialog and reset form
             setDialogOpen(false);
             setDepartureTime('');
-            
+            setLocationError(null);
+
             // Show success message to user
         } catch (error) {
             console.error('Error submitting schedule:', error);
@@ -270,6 +327,21 @@ export default function FurnasLotPage() {
                                     <p className="text-xs text-muted-foreground text-center">
                                         Select when you plan to leave the parking lot
                                     </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        📍 Your location will be shared when submitting
+                                    </p>
+                                    {locationError && (
+                                        <p className="text-xs text-red-500 text-center">
+                                            {locationError}
+                                        </p>
+                                    )}
+                                    {userLocation && (
+                                        <p className="text-xs text-green-600 text-center">
+                                            ✓ Location obtained
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <DialogFooter className="gap-2 sm:gap-0">

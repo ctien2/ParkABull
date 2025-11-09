@@ -1,4 +1,4 @@
 ---
 alwaysApply: true
 ---
-This is a Next.js 15 (app router) + shadcn + tailwind app. This app uses supabase for the database + authentication. This app uses mapbox to render map, `mapbox-map.tsx`
+This is a Next.js 15 (app router) + shadcn + tailwind app. This app uses supabase for the database + authentication. It uses flask for the backend.
