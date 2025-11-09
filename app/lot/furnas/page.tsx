@@ -192,8 +192,12 @@ export default function FurnasLotPage() {
             </div>
 
             {/* Middle Empty Space */}
-            <div className="flex-1 bg-muted/20">
-                {/* Empty space in the middle */}
+            <div className="flex-1 bg-muted/20 flex items-center justify-center">
+                <img
+                    src="/img/furnas_lot.png"
+                    alt="Furnas Parking Lot"
+                    className="max-w-full max-h-full object-contain"
+                />
             </div>
 
             {/* Right Sidebar */}
@@ -249,7 +253,7 @@ export default function FurnasLotPage() {
                         {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 
-                    <ListLeaving departures={departures} />
+                    <ListLeaving />
                 </div>
             </div>
         </div>
