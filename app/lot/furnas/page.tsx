@@ -328,13 +328,8 @@ export default function FurnasLotPage() {
                             </div>
                             <Separator />
                             <div>
-                                <h4 className="font-semibold text-sm mb-1">Parking Fee</h4>
-                                <p className="text-sm text-muted-foreground">$2.50/hour • $15.00/day</p>
-                            </div>
-                            <Separator />
-                            <div>
                                 <h4 className="font-semibold text-sm mb-1">Permit Required</h4>
-                                <p className="text-sm text-muted-foreground">Blue or Gold permit</p>
+                                <p className="text-sm text-muted-foreground">Faculty permit required 8am to 3pm.</p>
                             </div>
                         </CardContent>
                     </Card>
