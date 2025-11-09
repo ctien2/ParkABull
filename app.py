@@ -43,11 +43,31 @@ def check_in_range(request):
         return False
     return True 
 
-def return_schedule_json(lot_name):
-    lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
-    lot_id = lot_data.data[0]['id']
-    list = supabase.table('schedules').select('*').eq('lot_id', lot_id).execute()
-    return json.dumps(list.data)
+def return_schedule_json(lot_name, top_n=5):
+    # Get lot ID
+    lot_data = supabase.table('lots').select('id').eq('name', lot_name).single().execute()
+    lot_id = lot_data.data['id']
+
+    # Fetch schedules for this lot
+    schedules = supabase.table('schedules').select('time').eq('lot_id', lot_id).execute().data
+    
+    if not schedules:
+        return []
+
+    # Convert times to datetime and count occurrences
+    times = [datetime.fromisoformat(s['time']) for s in schedules]
+    counter = Counter(times)
+
+    # Sort by time (earliest first)
+    sorted_times = sorted(counter.items(), key=lambda x: x[0])
+
+    # Format response
+    result = [
+        { "time": t.isoformat(), "count": count }
+        for t, count in sorted_times[:top_n]
+    ]
+
+    return result
 
 #for any route within lots(example: "/api/lot/furnas")
 @api.route('/lot/<lot_name>', methods = ['GET'])
