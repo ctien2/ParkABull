@@ -70,6 +70,13 @@ export default function MapboxMap() {
     // Add navigation controls (zoom buttons)
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
+    // Create popup instance
+    const popup = new mapboxgl.Popup({
+      closeButton: false,
+      closeOnClick: false,
+      className: 'parking-lot-popup'
+    });
+
     // Add parking lot layers when map loads
     map.current.on('load', () => {
       if (!map.current) return;
@@ -102,17 +109,59 @@ export default function MapboxMap() {
         }
       });
 
-      // Change cursor on hover
-      map.current.on('mouseenter', 'parking-lots-fill', () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = 'pointer';
+      // Handle mouseenter - show tooltip and highlight
+      map.current.on('mouseenter', 'parking-lots-fill', (e) => {
+        if (!map.current) return;
+
+        // Change cursor to pointer
+        map.current.getCanvas().style.cursor = 'pointer';
+
+        // Highlight the polygon
+        map.current.setPaintProperty('parking-lots-fill', 'fill-opacity', 0.7);
+
+        if (e.features && e.features.length > 0) {
+          const feature = e.features[0];
+          const name = feature.properties?.name;
+
+          // Get the coordinates to position popup above the polygon
+          if (feature.geometry.type === 'Polygon') {
+            const coordinates = feature.geometry.coordinates[0];
+
+            // Find the northernmost (maximum latitude) and center longitude
+            let maxLat = -Infinity;
+            let sumLng = 0;
+
+            coordinates.forEach(coord => {
+              const [lng, lat] = coord;
+              if (lat > maxLat) {
+                maxLat = lat;
+              }
+              sumLng += lng;
+            });
+
+            const centerLng = sumLng / coordinates.length;
+
+            // Set popup content and position it above the polygon
+            popup
+              .setLngLat([centerLng, maxLat])
+              .setHTML(`<div style="font-weight: 600; padding: 4px 8px;">${name}</div>`)
+              .addTo(map.current);
+          }
         }
       });
 
+      // Handle mouseleave - hide tooltip and remove highlight
       map.current.on('mouseleave', 'parking-lots-fill', () => {
-        if (map.current) {
-          map.current.getCanvas().style.cursor = '';
-        }
+        if (!map.current) return;
+
+        // Reset cursor
+        map.current.getCanvas().style.cursor = '';
+
+        // Remove highlight
+        map.current.setPaintProperty('parking-lots-fill', 'fill-opacity', 0.5);
+
+        // Remove popup
+        popup.remove();
       });
 
       // Handle clicks on parking lots
@@ -124,19 +173,6 @@ export default function MapboxMap() {
           if (route) {
             router.push(route);
           }
-        }
-      });
-
-      // Highlight on hover
-      map.current.on('mouseenter', 'parking-lots-fill', () => {
-        if (map.current) {
-          map.current.setPaintProperty('parking-lots-fill', 'fill-opacity', 0.7);
-        }
-      });
-
-      map.current.on('mouseleave', 'parking-lots-fill', () => {
-        if (map.current) {
-          map.current.setPaintProperty('parking-lots-fill', 'fill-opacity', 0.5);
         }
       });
     });
