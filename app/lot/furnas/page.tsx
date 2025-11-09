@@ -198,9 +198,8 @@ export default function FurnasLotPage() {
                     {videoError && (
                         <div className="text-red-500 text-sm">{videoError}</div>
                     )}
-                    <video 
-                        className="w-full h-full object-contain rounded-lg shadow-lg bg-black"
-                        controls
+                    <video
+                        className="w-full h-full object-cover rounded-lg shadow-lg bg-black"
                         loop
                         muted
                         autoPlay
