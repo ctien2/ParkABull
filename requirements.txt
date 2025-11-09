@@ -5,3 +5,4 @@ supervision
 numpy
 requests
 Pillow
+gunicorn
