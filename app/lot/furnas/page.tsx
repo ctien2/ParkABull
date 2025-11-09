@@ -11,7 +11,7 @@ import ListLeaving from '@/components/list-leaving';
 
 export default function FurnasLotPage() {
     // Get backend URL from environment variable
-    const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001';
+    const BACKEND_URL = "https://parkabull.onrender.com";
     
     const [departures, setDepartures] = useState([]);
     const [loading, setLoading] = useState(true);
