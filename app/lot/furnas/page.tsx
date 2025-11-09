@@ -15,6 +15,11 @@ export default function FurnasLotPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [departureTime, setDepartureTime] = useState('');
     const [hasClickedLeavingSoon, setHasClickedLeavingSoon] = useState(false);
+    const [lotData, setLotData] = useState({
+        available_spots: 0,
+        leaving_soon: 0,
+        total_spots: 0
+    });
 
     // Set current time when dialog opens
     useEffect(() => {
@@ -26,57 +31,73 @@ export default function FurnasLotPage() {
         }
     }, [dialogOpen, departureTime]);
 
-        // Handler functions - accessible throughout the component
-        const handleSubmitSchedule = async () => {
-            try {
-                const response = await fetch('http://localhost:5001/api/submit-schedule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        lot_name: 'Furnas Hall Parking',
-                        // Add other data like departure time, spot number, etc.
-                    }),
-                });
+    // Handler functions - accessible throughout the component
+    const handleSubmitSchedule = async () => {
+        try {
+            const response = await fetch('http://localhost:5001/api/submit-schedule', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lot_name: 'Furnas Hall Parking',
+                    // Add other data like departure time, spot number, etc.
+                }),
+            });
 
-                if (!response.ok) {
-                    throw new Error('Failed to submit schedule');
-                }
-
-                const data = await response.json();
-                console.log('Schedule submitted:', data);
-                // Show success message to user
-            } catch (error) {
-                console.error('Error submitting schedule:', error);
-                // Show error message to user
+            if (!response.ok) {
+                throw new Error('Failed to submit schedule');
             }
-        };
 
-        const handleLeavingSoon = async () => {
-            try {
-                const response = await fetch('http://localhost:5001/api/leaving-soon', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        lot_name: 'Furnas',
-                    }),
-                });
+            const data = await response.json();
+            console.log('Schedule submitted:', data);
+            // Show success message to user
+        } catch (error) {
+            console.error('Error submitting schedule:', error);
+            // Show error message to user
+        }
+    };
 
-                if (!response.ok) {
-                    throw new Error('Failed to update leaving status');
-                }
+    const handleLeavingSoon = async () => {
+        try {
+            const response = await fetch('http://localhost:5001/api/leaving-soon', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lot_name: 'Furnas',
+                }),
+            });
 
-                const data = await response.json();
-                console.log('Leaving soon updated:', data);
-                // Show success message to user
-            } catch (error) {
-                console.error('Error updating leaving status:', error);
-                // Show error message to user
+            if (!response.ok) {
+                throw new Error('Failed to update leaving status');
             }
-        };
+
+            const data = await response.json();
+            console.log('Leaving soon updated:', data);
+
+            // Update lot data with new values
+            if (data.available_spots !== undefined) {
+                setLotData({
+                    available_spots: data.available_spots,
+                    leaving_soon: data.leaving_soon || 0,
+                    total_spots: data.total_spots || 150
+                });
+            }
+
+            // Update departures list if included
+            if (data.departures) {
+                setDepartures(data.departures);
+            }
+
+            setHasClickedLeavingSoon(true);
+            // Show success message to user
+        } catch (error) {
+            console.error('Error updating leaving status:', error);
+            // Show error message to user
+        }
+    };
 
     // Fetch departures on component mount
     useEffect(() => {
@@ -95,6 +116,15 @@ export default function FurnasLotPage() {
 
                 const data = await response.json();
                 setDepartures(data.departures || []); // Assuming backend returns {departures: [...]}
+
+                // Update lot data with values from API
+                if (data.available_spots !== undefined) {
+                    setLotData({
+                        available_spots: data.available_spots,
+                        leaving_soon: data.leaving_soon || 0,
+                        total_spots: data.total_spots || 150
+                    });
+                }
             } catch (error) {
                 console.error('Error fetching departures:', error);
             } finally {
@@ -122,8 +152,8 @@ export default function FurnasLotPage() {
                         <CardContent>
                             <p className="text-lg font-semibold">Availability</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-green-600">87</span>
-                                <span className="text-muted-foreground">/ 150 spaces</span>
+                                <span className="text-4xl font-bold text-green-600">{lotData.available_spots}</span>
+                                <span className="text-muted-foreground">/ {lotData.total_spots} spaces</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -132,8 +162,8 @@ export default function FurnasLotPage() {
                         <CardContent>
                             <p className="text-lg font-semibold">Leaving Soon</p>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-orange-600">5</span>
-                                <span className="text-muted-foreground">/ 150 spaces</span>
+                                <span className="text-4xl font-bold text-orange-600">{lotData.leaving_soon}</span>
+                                <span className="text-muted-foreground">/ {lotData.total_spots} spaces</span>
                             </div>
                         </CardContent>
                     </Card>

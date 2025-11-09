@@ -87,7 +87,7 @@ def fetch_occupancy(lot_name):
 
     print(f"🔍 Querying Supabase for lot: {lot_name}")
     response = supabase.table("lots") \
-        .select("occupancy, max_occupancy") \
+        .select("occupancy, max_occupancy, leaving_soon") \
         .eq("name", lot_name) \
         .single() \
         .execute()
@@ -99,15 +99,18 @@ def fetch_occupancy(lot_name):
     occupancy = response.data["occupancy"]
     max_occ = response.data["max_occupancy"]
     available = max_occ - occupancy
+    leaving_soon_count = response.data.get("leaving_soon", 0)
 
-    print(f"✅ SUCCESS: Occupancy={occupancy}, Max={max_occ}, Available={available}")
+    print(f"✅ SUCCESS: Occupancy={occupancy}, Max={max_occ}, Available={available}, Leaving Soon={leaving_soon_count}")
     schedule = return_schedule_json(lot_name)
     result = {
         "lot": lot_name,
         "occupancy": occupancy,
         "max_occupancy": max_occ,
-        "available": available, 
-        "schedule": schedule
+        "available_spots": available,
+        "total_spots": max_occ,
+        "leaving_soon": leaving_soon_count,
+        "departures": json.loads(schedule) if schedule else []
     }
     print(f"Returning: {result}")
     print("=== END FETCH OCCUPANCY ===\n")
@@ -165,14 +168,30 @@ def leaving_soon():
     
     print(f"🔍 Updating Supabase for lot: {lot_name}")
     lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
-    leaving_soon = lot_data.data[0].get('leaving_soon')
-    supabase.table('lots').update({'leaving_soon': leaving_soon+1}).eq('name', lot_name).execute()
+    leaving_soon_count = lot_data.data[0].get('leaving_soon', 0)
+    occupancy = lot_data.data[0].get('occupancy', 0)
+    max_occ = lot_data.data[0].get('max_occupancy', 0)
+    
+    # Increment leaving_soon count
+    new_leaving_soon = leaving_soon_count + 1
+    supabase.table('lots').update({'leaving_soon': new_leaving_soon}).eq('name', lot_name).execute()
     
     threading.Thread(target=revert_increment, args=(lot_name,)).start()
     print("✅ SUCCESS: Lot status updated")
     print("=== END LEAVING SOON ===\n")
     
-    return jsonify({"message": "Lot status updated."}), 200
+    # Return updated lot data
+    available = max_occ - occupancy
+    schedule = return_schedule_json(lot_name)
+    result = {
+        "message": "Lot status updated.",
+        "available_spots": available,
+        "total_spots": max_occ,
+        "leaving_soon": new_leaving_soon,
+        "departures": json.loads(schedule) if schedule else []
+    }
+    
+    return jsonify(result), 200
 
 @api.route('/submit-schedule', methods=['POST'])
 def submit_schedule():
