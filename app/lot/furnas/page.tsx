@@ -229,7 +229,7 @@ export default function FurnasLotPage() {
                             });
                         }}
                         onCanPlay={() => console.log('Video can play')}
-                        src="/parking_lot_video.mp4"
+                        src="/parking_lot_video_slow.mp4"
                     >
                         Your browser does not support the video tag.
                     </video>
