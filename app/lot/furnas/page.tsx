@@ -26,50 +26,57 @@ export default function FurnasLotPage() {
         }
     }, [dialogOpen, departureTime]);
 
-    // Handler functions - accessible throughout the component
-    const handleSubmitSchedule = async () => {
-        if (!departureTime) {
-            console.error('Please select a departure time');
-            return;
-        }
+        // Handler functions - accessible throughout the component
+        const handleSubmitSchedule = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/submit-schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lot_name: 'Furnas Hall Parking',
+                        // Add other data like departure time, spot number, etc.
+                    }),
+                });
 
-        console.log('Selected departure time:', departureTime);
-        // Close dialog and reset form
-        setDialogOpen(false);
-        setDepartureTime('');
+                if (!response.ok) {
+                    throw new Error('Failed to submit schedule');
+                }
 
-        // TODO: Implement API call
-        // try {
-        //     const response = await fetch('http://localhost:5001/api/submit-schedule', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //         },
-        //         body: JSON.stringify({
-        //             lot_name: 'Furnas Hall Parking',
-        //             departure_time: departureTime,
-        //         }),
-        //     });
+                const data = await response.json();
+                console.log('Schedule submitted:', data);
+                // Show success message to user
+            } catch (error) {
+                console.error('Error submitting schedule:', error);
+                // Show error message to user
+            }
+        };
 
-        //     if (!response.ok) {
-        //         throw new Error('Failed to submit schedule');
-        //     }
+        const handleLeavingSoon = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/leaving-soon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lot_name: 'Furnas Hall Parking',
+                    }),
+                });
 
-        //     const data = await response.json();
-        //     console.log('Schedule submitted:', data);
-        //     // Show success message to user
-        // } catch (error) {
-        //     console.error('Error submitting schedule:', error);
-        //     // Show error message to user
-        // }
-    };
+                if (!response.ok) {
+                    throw new Error('Failed to update leaving status');
+                }
 
-    const handleLeavingSoon = () => {
-        // Disable button after clicking
-        setHasClickedLeavingSoon(true);
-        console.log('Leaving soon clicked');
-        // TODO: Implement API call when backend is ready
-    };
+                const data = await response.json();
+                console.log('Leaving soon updated:', data);
+                // Show success message to user
+            } catch (error) {
+                console.error('Error updating leaving status:', error);
+                // Show error message to user
+            }
+        };
 
     // Fetch departures on component mount
     useEffect(() => {
