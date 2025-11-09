@@ -6,7 +6,16 @@ export default function Home() {
     <>
       <header className="w-full border-b border-gray-200 bg-white">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-bold">Parking Lotter</h1>
+          <div className="flex items-center gap-3">
+            <a href="/">
+              <img 
+                src="/img/logo.jpg" 
+                alt="Park-A-Bull Logo" 
+                className="w-10 h-10 rounded-md object-cover cursor-pointer"
+              />
+            </a>
+            <h1 className="text-2xl font-bold">Park-A-Bull</h1>
+          </div>
           <UserMenu />
         </div>
       </header>

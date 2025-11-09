@@ -289,10 +289,24 @@ export default function FurnasLotPage() {
     }
 
     return (
-        <div className="flex h-screen w-full">
+        <div className="flex h-screen w-full relative">
+            {/* Home Button - Top Left */}
+            <a 
+                href="/"
+                className="absolute top-4 left-4 z-50 flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 border border-gray-200"
+                title="Return to Home"
+            >
+                <img 
+                    src="/img/logo.jpg" 
+                    alt="Home" 
+                    className="w-10 h-10 rounded-md object-cover"
+                />
+                <span className="text-sm font-semibold text-gray-700">Home</span>
+            </a>
+
             {/* Left Sidebar */}
             <div className="w-96 h-full overflow-y-auto border-r bg-background">
-                <div className="p-6 space-y-6">
+                <div className="p-6 space-y-6 pt-20">
                     <div>
                         <h1 className="text-3xl font-bold mb-2">Furnas Hall Parking</h1>
                         <p className="text-sm text-muted-foreground">University at Buffalo - North Campus</p>
