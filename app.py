@@ -2,7 +2,7 @@ from flask import Flask, request, Response, jsonify, Blueprint
 from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import os, time, threading, json
+import os, time, threading, json, uuid
 load_dotenv()
 
 app = Flask(__name__)
@@ -43,6 +43,32 @@ def check_in_range(request):
         return False
     return True 
 
+def return_schedule_json(lot_name, top_n=5):
+    # Get lot ID
+    lot_data = supabase.table('lots').select('id').eq('name', lot_name).single().execute()
+    lot_id = lot_data.data['id']
+
+    # Fetch schedules for this lot
+    schedules = supabase.table('schedules').select('time').eq('lot_id', lot_id).execute().data
+    
+    if not schedules:
+        return []
+
+    # Convert times to datetime and count occurrences
+    times = [datetime.fromisoformat(s['time']) for s in schedules]
+    counter = Counter(times)
+
+    # Sort by time (earliest first)
+    sorted_times = sorted(counter.items(), key=lambda x: x[0])
+
+    # Format response
+    result = [
+        { "time": t.isoformat(), "count": count }
+        for t, count in sorted_times[:top_n]
+    ]
+
+    return result
+
 #for any route within lots(example: "/api/lot/furnas")
 @api.route('/lot/<lot_name>', methods = ['GET'])
 def fetch_occupancy(lot_name):
@@ -75,12 +101,13 @@ def fetch_occupancy(lot_name):
     available = max_occ - occupancy
 
     print(f"✅ SUCCESS: Occupancy={occupancy}, Max={max_occ}, Available={available}")
-    
+    schedule = return_schedule_json(lot_name)
     result = {
         "lot": lot_name,
         "occupancy": occupancy,
         "max_occupancy": max_occ,
-        "available": available
+        "available": available, 
+        "schedule": schedule
     }
     print(f"Returning: {result}")
     print("=== END FETCH OCCUPANCY ===\n")
@@ -149,21 +176,32 @@ def leaving_soon():
 
 @api.route('/submit-schedule', methods=['POST'])
 def submit_schedule():
-    print("\n=== SUBMIT SCHEDULE CALLED ===")
-    print(f"Request URL: {request.url}")
-    print(f"Request Method: {request.method}")
+    # print("\n=== SUBMIT SCHEDULE CALLED ===")
+    # print(f"Request URL: {request.url}")
+    # print(f"Request Method: {request.method}")
     
     data = request.get_json()
-    print(f"Request Body: {data}")
+    # print(f"Request Body: {data}")
     
     lot_name = data.get('lot_name')
-    print(f"Lot Name: {lot_name}")
+    # print(f"Lot Name: {lot_name}")
     
     # TODO: Add your schedule submission logic here
-    print(f"🔍 Processing schedule for lot: {lot_name}")
+    # print(f"🔍 Processing schedule for lot: {lot_name}")
+    id = uuid.uuid4()
     
-    print("✅ SUCCESS: Schedule submitted")
-    print("=== END SUBMIT SCHEDULE ===\n")
+    lot_data = supabase.table('lots').select('*').eq('name', lot_name).execute()
+    lot_id = lot_data.data[0].get('id')
+    time = data.get('time')
+    supabase.table('schedules').insert({
+        'id': id, 
+        'lot_id': lot_id,
+        'time': time
+        }).execute()
+
+
+    # print("✅ SUCCESS: Schedule submitted")
+    # print("=== END SUBMIT SCHEDULE ===\n")
     
     return jsonify({"message": "Schedule submitted successfully."}), 200
 
