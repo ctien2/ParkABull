@@ -30,8 +30,6 @@ supabase: Client = create_client(url, key)
 #     return render_template('index.html', message="Hello, Flask!")
 
 
-
-
 def check_in_range(request):
     data = request.get_json()
     user_latitude = data.get('user_latitude')
@@ -127,6 +125,7 @@ def leaving_soon():
     print(f"Request Body: {data}")
     
     lot_name = data.get('lot_name')
+    # supabase.table('lots').update({'name': lot_name}).eq('').execute()
     print(f"Lot Name: {lot_name}")
     
     print(f"🔍 Updating Supabase for lot: {lot_name}")
