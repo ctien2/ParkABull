@@ -93,7 +93,7 @@ export default function FurnasLotPage() {
     useEffect(() => {
         const fetchOccupancy = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas Hall Parking', {
+                const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
