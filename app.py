@@ -16,8 +16,6 @@ supabase: Client = create_client(url, key)
 #     return render_template('index.html', message="Hello, Flask!")
 
 
-
-
 def check_in_range(request):
     data = request.get_json()
     user_latitude = data.get('user_latitude')
@@ -64,7 +62,7 @@ def fetch_occupancy():
 def leaving_soon():
     data = request.get_json()
     lot_name = data.get('lot_name')
-    supabase.table('lots').update({'name': lot_name}).eq('', lot_name).execute()
+    # supabase.table('lots').update({'name': lot_name}).eq('').execute()
     return jsonify({"message": "Lot status updated."}), 200
 
 if __name__ == '__main__':
