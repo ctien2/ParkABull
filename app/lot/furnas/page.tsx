@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react';
 import FullPageMapbox from '@/components/map/full-page-mapbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +9,91 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function FurnasLotPage() {
+        const [departures, setDepartures] = useState([]);
+        const [loading, setLoading] = useState(true);
+        
+        // Handler functions - accessible throughout the component
+        const handleSubmitSchedule = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/submit-schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lot_name: 'Furnas Hall Parking',
+                        // Add other data like departure time, spot number, etc.
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit schedule');
+                }
+
+                const data = await response.json();
+                console.log('Schedule submitted:', data);
+                // Show success message to user
+            } catch (error) {
+                console.error('Error submitting schedule:', error);
+                // Show error message to user
+            }
+        };
+
+        const handleLeavingSoon = async () => {
+            try {
+                const response = await fetch('http://localhost:5001/api/leaving-soon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        lot_name: 'Furnas Hall Parking',
+                    }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update leaving status');
+                }
+
+                const data = await response.json();
+                console.log('Leaving soon updated:', data);
+                // Show success message to user
+            } catch (error) {
+                console.error('Error updating leaving status:', error);
+                // Show error message to user
+            }
+        };
+
+        // Fetch departures on component mount
+        useEffect(() => {
+            const fetchOccupancy = async () => {
+                try {
+                    const response = await fetch('http://localhost:5001/api/lot/furnas?lot_name=Furnas Hall Parking', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch occupancy');
+                    }
+
+                    const data = await response.json();
+                    setDepartures(data.departures || []); // Assuming backend returns {departures: [...]}
+                } catch (error) {
+                    console.error('Error fetching departures:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            fetchOccupancy();
+
+            // Optional: Auto-refresh every 30 seconds for real-time updates
+            const interval = setInterval(fetchOccupancy, 30000);
+            return () => clearInterval(interval);
+        }, []);
     return (
         <FullPageMapbox
             center={[-78.7863533685218, 43.00247044789438]}
@@ -55,11 +143,13 @@ export default function FurnasLotPage() {
             }
             rightSidebar={
                 <div className="p-6 flex flex-col h-full space-y-4">
-                    <Button size="lg" className="w-full h-14 text-lg font-semibold">
+                    <Button size="lg" className="w-full h-14 text-lg font-semibold"
+                        onClick={handleSubmitSchedule}>
                         Submit Schedule
                     </Button>
 
-                    <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive">
+                    <Button size="lg" className="w-full h-14 text-lg font-semibold" variant="destructive"
+                        onClick={handleLeavingSoon}>
                         Leaving Soon
                     </Button>
 
