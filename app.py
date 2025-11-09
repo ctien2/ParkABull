@@ -34,7 +34,18 @@ def check_location():
         Response.status_code = 404
         return {}
 
+#for any route within lots(example: "/lots/ketter")
+@app.route('/lots/*', method = ['GET'])
+def fetch_occupancy():
+    lot_name = request.args.get('name')
+    #error handling
 
+    occupancy = supabase.table("Lots").select("occupancy").eq("name", lot_name).execute()
+    max_occ = supabase.table("Lots").select("max_occupancy").eq("name", lot_name).execute()
+    if not occupancy.data or not max_occ.data:
+        return jsonify({"message": "User not found"}), 404
+    
+    available = occupancy - max_occ
 
 if __name__ == '__main__':
     app.run(debug=True)
