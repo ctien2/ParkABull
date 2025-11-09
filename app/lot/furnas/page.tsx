@@ -461,7 +461,7 @@ export default function FurnasLotPage() {
                         {hasClickedLeavingSoon ? 'Leaving Soon' : 'Leaving Soon'}
                     </Button>
 
-                    <ListLeaving />
+                    <ListLeaving departures={departures} />
                 </div>
             </div>
         </div>

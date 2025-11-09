@@ -356,10 +356,7 @@ def leaving_soon():
     data = request.get_json()
     print(f"Request Body: {data}")
     
-<<<<<<< Updated upstream
     # Temporarily disabled for testing - uncomment to re-enable range check
-=======
->>>>>>> Stashed changes
     # if check_in_range(request) == False:
     #     return jsonify({"message": "User not in range."}), 404
 
