@@ -463,6 +463,20 @@ def get_live_cv_data():
         print("=== END GET LIVE CV DATA ===\n")
         return jsonify({"error": str(e)}), 500
 
+@api.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for cron jobs to keep service alive."""
+    return jsonify({
+        "status": "healthy",
+        "service": "backend",
+        "timestamp": datetime.now().isoformat()
+    }), 200
+
+@api.route('/ping', methods=['GET'])
+def ping():
+    """Simple ping endpoint for uptime monitoring."""
+    return jsonify({"message": "pong"}), 200
+
 
 def cleanup_expired_schedules():
     while True:
