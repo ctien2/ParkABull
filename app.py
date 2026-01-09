@@ -1,4 +1,4 @@
-from flask import Flask, request, Response, jsonify, Blueprint
+from flask import Flask, request, Response, jsonify, Blueprint, make_response
 from flask_cors import CORS
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -466,7 +466,7 @@ def get_live_cv_data():
 @api.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint for cron jobs to keep service alive."""
-    return {"", 204}
+    return make_response("", 204)
 
 @api.route('/ping', methods=['GET'])
 def ping():
