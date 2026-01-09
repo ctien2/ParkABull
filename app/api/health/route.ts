@@ -5,9 +5,5 @@ import { NextResponse } from 'next/server';
  * GET /api/health
  */
 export async function GET() {
-  return NextResponse.json({
-    status: 'healthy',
-    service: 'frontend',
-    timestamp: new Date().toISOString(),
-  });
+  return new NextResponse("OK", { status: 200 });
 }
