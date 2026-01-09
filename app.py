@@ -466,11 +466,7 @@ def get_live_cv_data():
 @api.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint for cron jobs to keep service alive."""
-    return jsonify({
-        "status": "healthy",
-        "service": "backend",
-        "timestamp": datetime.now().isoformat()
-    }), 200
+    return {"", 204}
 
 @api.route('/ping', methods=['GET'])
 def ping():
